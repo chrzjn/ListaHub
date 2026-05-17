@@ -1,28 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Login – StoreMS</title>
+  <title>Sign Up – StoreMS</title>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap" rel="stylesheet"/>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
       --bg: #f4f5f7;
-      --sidebar: #4a4a4a;
       --card: #5a5a5a;
       --input-bg: #7a7a7a;
       --input-icon: #a0a0a0;
       --logo-box: #d0d0d0;
       --text-light: #fff;
-      --text-dark: #111;
       --btn-bg: #e8e8e8;
       --btn-text: #111;
-      --accent: #2563eb;
       --link: #ccc;
       --nav-pill: #6b6b6b;
-      --nav-pill-text: #e0e0e0;
     }
 
     body {
@@ -33,7 +29,6 @@
       flex-direction: column;
     }
 
-    /* NAV */
     nav {
       background: #fff;
       border-bottom: 1px solid #ddd;
@@ -45,18 +40,17 @@
       flex-shrink: 0;
     }
     .nav-logo {
-      background: var(--sidebar);
-      color: var(--text-light);
+      background: #4a4a4a;
+      color: #fff;
       font-weight: 700;
       font-size: 15px;
       padding: 10px 28px;
       border-radius: 50px;
-      letter-spacing: .5px;
     }
     .nav-actions { display: flex; gap: 12px; }
     .nav-pill {
       background: var(--nav-pill);
-      color: var(--nav-pill-text);
+      color: #e0e0e0;
       font-size: 13px;
       font-weight: 600;
       padding: 8px 22px;
@@ -67,7 +61,6 @@
     }
     .nav-pill:hover { background: #555; }
 
-    /* MAIN */
     main {
       flex: 1;
       display: grid;
@@ -77,41 +70,31 @@
       gap: 60px;
     }
 
-    /* LEFT SIDE */
     .left-content { display: flex; flex-direction: column; gap: 24px; }
-    .hero-image {
-      width: 100%;
-      height: 130px;
-      background: #c8c8c8;
-      border-radius: 10px;
-    }
+    .hero-image { width: 100%; height: 130px; background: #c8c8c8; border-radius: 10px; }
     .text-lines { display: flex; flex-direction: column; gap: 12px; }
     .line { height: 18px; background: #d0d0d0; border-radius: 6px; }
-    .line:nth-child(1) { width: 100%; }
-    .line:nth-child(2) { width: 100%; }
-    .line:nth-child(3) { width: 100%; }
     .line:nth-child(4) { width: 60%; }
 
-    /* LOGIN CARD */
-    .login-card {
+    .signup-card {
       background: var(--card);
       border-radius: 20px;
-      padding: 36px 44px 40px;
+      padding: 32px 44px 36px;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 16px;
       box-shadow: 0 8px 40px rgba(0,0,0,.18);
     }
     .logo-box {
       background: var(--logo-box);
       border-radius: 14px;
-      padding: 24px;
+      padding: 20px;
       text-align: center;
     }
-    .logo-box p { color: #555; font-size: 15px; margin-bottom: 4px; }
-    .logo-box h2 { color: #111; font-size: 26px; font-weight: 700; }
+    .logo-box p { color: #555; font-size: 14px; margin-bottom: 4px; }
+    .logo-box h2 { color: #111; font-size: 24px; font-weight: 700; }
 
-    .field-group { display: flex; flex-direction: column; gap: 6px; }
+    .field-group { display: flex; flex-direction: column; gap: 5px; }
     .field-label { color: #e0e0e0; font-size: 13px; font-weight: 600; }
     .input-wrap {
       background: var(--input-bg);
@@ -121,12 +104,7 @@
       padding: 4px 16px 4px 4px;
       gap: 10px;
     }
-    .input-icon {
-      width: 40px; height: 40px;
-      background: var(--input-icon);
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
+    .input-icon { width: 38px; height: 38px; background: var(--input-icon); border-radius: 50%; flex-shrink: 0; }
     .input-wrap input {
       background: transparent;
       border: none;
@@ -138,30 +116,24 @@
     }
     .input-wrap input::placeholder { color: #bbb; }
 
-    .btn-login {
+    .btn-create {
       background: var(--btn-bg);
       color: var(--btn-text);
       border: none;
       border-radius: 50px;
-      padding: 14px;
+      padding: 13px;
       font-family: 'Sora', sans-serif;
       font-size: 15px;
       font-weight: 700;
       cursor: pointer;
       width: 100%;
+      margin-top: 4px;
       transition: background .2s;
     }
-    .btn-login:hover { background: #d4d4d4; }
+    .btn-create:hover { background: #d4d4d4; }
 
-    .card-link {
-      text-align: center;
-    }
-    .card-link a {
-      color: var(--link);
-      font-size: 12px;
-      text-decoration: underline;
-      cursor: pointer;
-    }
+    .card-link { text-align: center; }
+    .card-link a { color: var(--link); font-size: 12px; text-decoration: underline; cursor: pointer; }
 
     @media (max-width: 900px) {
       main { grid-template-columns: 1fr; padding: 40px 24px; }
@@ -173,8 +145,8 @@
   <nav>
     <div class="nav-logo">StoreMS</div>
     <div class="nav-actions">
-      <button class="nav-pill">Log In</button>
-      <button class="nav-pill" onclick="location.href='signup.html'">Sign Up</button>
+      <button class="nav-pill" onclick="location.href='index.html'">Log In</button>
+      <button class="nav-pill">Sign Up</button>
     </div>
   </nav>
 
@@ -189,17 +161,17 @@
       </div>
     </div>
 
-    <div class="login-card">
+    <div class="signup-card">
       <div class="logo-box">
-        <p>Welcome To</p>
+        <p>Welcome to</p>
         <h2>Logo</h2>
       </div>
 
       <div class="field-group">
-        <label class="field-label">Email/Username</label>
+        <label class="field-label">Email</label>
         <div class="input-wrap">
           <div class="input-icon"></div>
-          <input type="text" placeholder="Enter email or username"/>
+          <input type="email" placeholder="Enter your email"/>
         </div>
       </div>
 
@@ -207,14 +179,30 @@
         <label class="field-label">Password</label>
         <div class="input-wrap">
           <div class="input-icon"></div>
-          <input type="password" placeholder="Enter password"/>
+          <input type="password" placeholder="Create password"/>
         </div>
       </div>
 
-      <button class="btn-login" onclick="location.href='dashboard.html'">Log In</button>
+      <div class="field-group">
+        <label class="field-label">Confirm Password</label>
+        <div class="input-wrap">
+          <div class="input-icon"></div>
+          <input type="password" placeholder="Confirm password"/>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Store Name</label>
+        <div class="input-wrap">
+          <div class="input-icon"></div>
+          <input type="text" placeholder="Enter store name"/>
+        </div>
+      </div>
+
+      <button class="btn-create" onclick="location.href='dashboard.html'">Create Account</button>
 
       <div class="card-link">
-        <a href="signup.html">Don't have an account? Sign up</a>
+        <a href="index.html">Already have an account? Log in</a>
       </div>
     </div>
   </main>

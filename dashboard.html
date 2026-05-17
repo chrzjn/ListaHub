@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard – StoreMS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --sidebar-bg: #4a4a4a;
+      --sidebar-width: 240px;
+      --main-bg: #f4f5f7;
+      --card-bg: #e2e4e8;
+      --section-title: #111;
+      --nav-active: #e8e8e8;
+      --nav-item: #6b6b6b;
+      --nav-text: #ddd;
+      --nav-text-active: #111;
+      --muted: #888;
+      --accent: #2563eb;
+      --user-card: #e8e8e8;
+    }
+
+    body {
+      font-family: 'Sora', sans-serif;
+      display: flex;
+      min-height: 100vh;
+      background: var(--main-bg);
+    }
+
+    /* SIDEBAR */
+    aside {
+      width: var(--sidebar-width);
+      background: var(--sidebar-bg);
+      display: flex;
+      flex-direction: column;
+      padding: 20px 16px;
+      gap: 8px;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      border-radius: 0 16px 16px 0;
+      z-index: 10;
+    }
+    .sidebar-logo {
+      background: #6b6b6b;
+      color: #eee;
+      text-align: center;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+    }
+    .sidebar-section-label {
+      color: #aaa;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      padding: 8px 8px 2px;
+    }
+    .sidebar-item {
+      background: var(--nav-item);
+      color: var(--nav-text);
+      border-radius: 12px;
+      padding: 11px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      text-align: left;
+      width: 100%;
+      transition: background .2s, color .2s;
+      text-decoration: none;
+      display: block;
+    }
+    .sidebar-item:hover { background: #7a7a7a; }
+    .sidebar-item.active {
+      background: var(--nav-active);
+      color: var(--nav-text-active);
+    }
+    .sidebar-logout {
+      margin-top: auto;
+      background: #616161;
+      color: #ddd;
+      border-radius: 12px;
+      padding: 11px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      width: 100%;
+      transition: background .2s;
+    }
+    .sidebar-logout:hover { background: #7a7a7a; }
+
+    /* MAIN CONTENT */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      padding: 36px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    /* TOP BAR */
+    .topbar {
+      display: flex;
+      justify-content: flex-end;
+    }
+    .user-card {
+      background: var(--user-card);
+      border-radius: 12px;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .user-info { text-align: right; }
+    .user-name { font-weight: 700; font-size: 14px; color: #222; }
+    .user-store { font-size: 12px; color: #666; }
+    .user-avatar {
+      width: 40px; height: 40px;
+      background: #888;
+      border-radius: 50%;
+    }
+
+    /* SECTION */
+    .section-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--section-title);
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 18px 20px 24px;
+    }
+    .stat-card .label { font-size: 13px; color: #555; margin-bottom: 14px; }
+    .stat-card .value { font-size: 26px; font-weight: 700; color: #111; }
+
+    .charts-row {
+      display: grid;
+      grid-template-columns: 3fr 2fr;
+      gap: 16px;
+    }
+    .chart-card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 20px;
+      min-height: 200px;
+    }
+    .chart-card .chart-title { font-size: 16px; font-weight: 700; color: #111; }
+
+    .sales-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .sales-stat {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 18px 20px 24px;
+      min-height: 90px;
+    }
+    .sales-stat .label { font-size: 13px; color: #555; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <aside>
+    <div class="sidebar-logo">Logo</div>
+
+    <a class="sidebar-item active" href="dashboard.html">Dashboard</a>
+
+    <div class="sidebar-section-label">Inventory</div>
+    <a class="sidebar-item" href="manage-products.html">Manage Products</a>
+    <a class="sidebar-item" href="restock.html">Restock</a>
+
+    <div class="sidebar-section-label">Sales</div>
+    <a class="sidebar-item" href="sales.html">Sales Analytics</a>
+
+    <div class="sidebar-section-label">Customer Credit</div>
+    <a class="sidebar-item" href="customers.html">Customers</a>
+
+    <button class="sidebar-logout" onclick="location.href='index.html'">Log out</button>
+  </aside>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="user-card">
+        <div class="user-info">
+          <div class="user-name">Princess Mae Bayag</div>
+          <div class="user-store">Bayag Store</div>
+        </div>
+        <div class="user-avatar"></div>
+      </div>
+    </div>
+
+    <!-- Products Overview -->
+    <div class="section-title">Products Overview</div>
+    <div class="cards-grid">
+      <div class="stat-card">
+        <div class="label">Out of Stock</div>
+        <div class="value">6 Products</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Expired Products</div>
+        <div class="value">7 Products</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Low Stocks Products</div>
+        <div class="value">6 Products</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Near Expiration</div>
+        <div class="value">9 Products</div>
+      </div>
+    </div>
+
+    <!-- Sales Overview -->
+    <div class="section-title">Sales Overview</div>
+    <div class="sales-cards">
+      <div class="sales-stat"><div class="label">Total Sales</div></div>
+      <div class="sales-stat"><div class="label">Revenue</div></div>
+      <div class="sales-stat"><div class="label">Total Items sold</div></div>
+      <div class="sales-stat"><div class="label">Today's Revenue</div></div>
+    </div>
+
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-title">Monthly Revenue</div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Inventory Status</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

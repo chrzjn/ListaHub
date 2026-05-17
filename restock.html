@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Restock – StoreMS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --sidebar-bg: #4a4a4a;
+      --sidebar-width: 240px;
+      --main-bg: #f4f5f7;
+      --nav-item: #6b6b6b;
+      --nav-text: #ddd;
+      --nav-active: #e8e8e8;
+    }
+
+    body { font-family: 'Sora', sans-serif; display: flex; min-height: 100vh; background: var(--main-bg); }
+
+    aside {
+      width: var(--sidebar-width);
+      background: var(--sidebar-bg);
+      display: flex;
+      flex-direction: column;
+      padding: 20px 16px;
+      gap: 8px;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      border-radius: 0 16px 16px 0;
+      z-index: 10;
+    }
+    .sidebar-logo { background: #6b6b6b; color: #eee; text-align: center; font-weight: 700; font-size: 15px; padding: 12px; border-radius: 12px; margin-bottom: 10px; }
+    .sidebar-section-label { color: #aaa; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .8px; padding: 8px 8px 2px; }
+    .sidebar-item { background: var(--nav-item); color: var(--nav-text); border-radius: 12px; padding: 11px 16px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; text-align: left; width: 100%; transition: background .2s; text-decoration: none; display: block; }
+    .sidebar-item:hover { background: #7a7a7a; }
+    .sidebar-item.active { background: var(--nav-active); color: #111; }
+    .sidebar-logout { margin-top: auto; background: #616161; color: #ddd; border-radius: 12px; padding: 11px 16px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; width: 100%; transition: background .2s; }
+    .sidebar-logout:hover { background: #7a7a7a; }
+
+    .main-content { margin-left: var(--sidebar-width); flex: 1; padding: 36px 40px; display: flex; flex-direction: column; gap: 24px; }
+
+    .topbar { display: flex; justify-content: flex-end; }
+    .user-card { background: #e8e8e8; border-radius: 12px; padding: 10px 16px; display: flex; align-items: center; gap: 12px; }
+    .user-info { text-align: right; }
+    .user-name { font-weight: 700; font-size: 14px; color: #222; }
+    .user-store { font-size: 12px; color: #666; }
+    .user-avatar { width: 40px; height: 40px; background: #888; border-radius: 50%; }
+
+    .page-title { font-size: 26px; font-weight: 800; color: #111; }
+
+    /* RESTOCK TABLE AREA */
+    .restock-section {
+      background: #d8dadd;
+      border-radius: 16px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .restock-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 14px;
+    }
+    .search-box {
+      display: flex;
+      align-items: center;
+      background: #fff;
+      border-radius: 50px;
+      padding: 8px 16px;
+      gap: 8px;
+      flex: 1;
+      max-width: 300px;
+    }
+    .search-box input { border: none; outline: none; font-family: 'Sora', sans-serif; font-size: 13px; width: 100%; }
+
+    .filter-tabs { display: flex; gap: 8px; }
+    .tab {
+      background: #ccc;
+      border: none;
+      border-radius: 50px;
+      padding: 8px 20px;
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #333;
+      transition: background .2s;
+    }
+    .tab.active { background: #6b6b6b; color: #eee; }
+    .tab:hover:not(.active) { background: #bbb; }
+
+    .restock-content {
+      background: #e0e2e5;
+      border-radius: 10px;
+      min-height: 400px;
+      padding: 20px;
+      color: #aaa;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <aside>
+    <div class="sidebar-logo">Logo</div>
+    <a class="sidebar-item" href="dashboard.html">Dashboard</a>
+    <div class="sidebar-section-label">Inventory</div>
+    <a class="sidebar-item" href="manage-products.html">Manage Products</a>
+    <a class="sidebar-item active" href="restock.html">Restock</a>
+    <div class="sidebar-section-label">Sales</div>
+    <a class="sidebar-item" href="sales.html">Sales Analytics</a>
+    <div class="sidebar-section-label">Customer Credit</div>
+    <a class="sidebar-item" href="customers.html">Customers</a>
+    <button class="sidebar-logout" onclick="location.href='index.html'">Log out</button>
+  </aside>
+
+  <div class="main-content">
+    <div class="topbar">
+      <div class="user-card">
+        <div class="user-info">
+          <div class="user-name">Princess Mae Bayag</div>
+          <div class="user-store">Bayag Store</div>
+        </div>
+        <div class="user-avatar"></div>
+      </div>
+    </div>
+
+    <div class="page-title">Restock</div>
+
+    <div class="restock-section">
+      <div class="restock-toolbar">
+        <div class="search-box">
+          <span>🔍</span>
+          <input type="text" placeholder="Search…"/>
+        </div>
+        <div class="filter-tabs">
+          <button class="tab active">All Products</button>
+          <button class="tab">Low Stock</button>
+          <button class="tab">Out of Stock</button>
+        </div>
+      </div>
+      <div class="restock-content">
+        <!-- Product restock list appears here -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>
