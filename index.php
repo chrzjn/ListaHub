@@ -1,7 +1,18 @@
+<?php
+// ============================================================
+//  index.php  –  Login page
+//  If already logged in, redirect straight to dashboard
+// ============================================================
+session_start();
+if (isset($_SESSION['user_id'])) {
+    header("Location: dashboard.php");
+    exit;
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Login – ListaHub</title>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap" rel="stylesheet"/>
@@ -17,7 +28,7 @@
     nav { background: #fff; border-bottom: 1px solid #ddd; padding: 0 32px; height: 72px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
     .nav-logo { background: var(--sidebar); color: #fff; font-weight: 700; font-size: 15px; padding: 10px 28px; border-radius: 50px; letter-spacing: .5px; }
     .nav-actions { display: flex; gap: 12px; }
-    .nav-pill { background: var(--nav-pill); color: var(--nav-pill-text); font-size: 13px; font-weight: 600; padding: 8px 22px; border-radius: 50px; cursor: pointer; border: none; transition: background .2s; }
+    .nav-pill { background: var(--nav-pill); color: var(--nav-pill-text); font-size: 13px; font-weight: 600; padding: 8px 22px; border-radius: 50px; cursor: pointer; border: none; transition: background .2s; text-decoration: none; display: inline-block; }
     .nav-pill:hover { background: #555; }
     main { flex: 1; display: grid; grid-template-columns: 1fr 1fr; align-items: center; padding: 60px 80px; gap: 60px; }
     .left-content { display: flex; flex-direction: column; gap: 24px; }
@@ -46,8 +57,8 @@
   <nav>
     <div class="nav-logo">ListaHub</div>
     <div class="nav-actions">
-      <button class="nav-pill">Log In</button>
-      <button class="nav-pill" onclick="location.href='signup.html'">Sign Up</button>
+      <a class="nav-pill" href="index.php">Log In</a>
+      <a class="nav-pill" href="signup.php">Sign Up</a>
     </div>
   </nav>
 
@@ -89,7 +100,7 @@
         <button type="submit" class="btn-login">Log In</button>
 
         <div class="card-link">
-          <a href="signup.html">Don't have an account? Sign up</a>
+          <a href="signup.php">Don't have an account? Sign up</a>
         </div>
 
       </form>

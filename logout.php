@@ -12,13 +12,12 @@ session_start();
 $_SESSION = [];
 
 // 2. Delete the session cookie from the browser
-//    (without this, the cookie lingers even after session is destroyed)
 if (ini_get("session.use_cookies")) {
     $params = session_get_cookie_params();
     setcookie(
         session_name(),
         '',
-        time() - 42000,       // set expiry in the past = delete it
+        time() - 42000,
         $params["path"],
         $params["domain"],
         $params["secure"],
@@ -29,7 +28,7 @@ if (ini_get("session.use_cookies")) {
 // 3. Destroy the session on the server
 session_destroy();
 
-// 4. Redirect to login page
-header("Location: index.html");
+// 4. Redirect to login page (.php not .html)
+header("Location: index.php");
 exit;
 ?>
