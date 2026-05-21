@@ -5,29 +5,29 @@ body {
 }
 
 :root {
-  /* Spacing */
-  --Space-0: 0px;
+  /* ── Spacing ── */
+  --Space-0:   0px;
   --Space-050: 2px;
 
-  /* Brand Colors */
-  --yellow: #ebd665;
-  --yellow-white: #fdf3db;
+  /* ── Brand Colors ── */
+  --yellow:         #ebd665;
+  --yellow-white:   #fdf3db;
   --yellow-white-1: #fcf8ee;
 
-  /* UI Colors */
-  --color-black: #000;
+  /* ── UI Colors ── */
+  --color-black:    #000;
   --color-cornsilk: #fff5d9;
   --color-gray-100: #3e2c23;
   --color-gray-200: #2b2b2b;
   --color-gray-300: rgba(0, 0, 0, 0.01);
 
-  /* Gap */
+  /* ── Gap ── */
   --gap-6:  6px;
   --gap-10: 10px;
   --gap-15: 15px;
   --gap-20: 20px;
 
-  /* Padding */
+  /* ── Padding ── */
   --padding-0:  0px;
   --padding-4:  4px;
   --padding-5:  5px;
@@ -37,25 +37,25 @@ body {
   --padding-15: 15px;
   --padding-20: 20px;
 
-  /* Border Radius */
+  /* ── Border Radius ── */
   --br-5_5: 5.5px;
   --br-10:  10px;
   --br-15:  15px;
   --br-20:  20px;
 
-  /* Font */
-  --font-inter: Inter;
+  /* ── Font ── */
+  --font-inter: Inter, sans-serif;
 
-  /* Font Sizes */
+  /* ── Font Sizes ── */
   --fs-13: 13px;
   --fs-15: 15px;
   --fs-16: 16px;
   --fs-18: 18px;
   --fs-19: 19px;
 
-  /* Width/Heights */
+  /* ── Width / Heights ── */
   --width-24: 24px;
 
-  /* Letter Spacing */
+  /* ── Letter Spacing ── */
   --ls--0_04: -0.04;
 }

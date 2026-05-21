@@ -159,8 +159,6 @@ $chartValuesJson = json_encode($chartValues);
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
-    <!-- Bootstrap Icons -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
 </head>
 <body>
 
@@ -169,115 +167,7 @@ $chartValuesJson = json_encode($chartValues);
   <!-- ===================================================
        SIDEBAR
        =================================================== -->
-  <aside class="sidebar">
-
-    <!-- Logo -->
-    <section class="logos">
-      <!--
-        TODO: Replace src with your logo image path.
-        e.g. src="pics_icons/ListaHub-logo-2-1.png"
-      -->
-      <img class="listahub-logo" alt="ListaHub" src="pics_icons/ListaHub-logo-2-1.png"/>
-    </section>
-
-    <!-- Dashboard -->
-    <a href="dashboard.php" class="menus">
-      <!--
-        TODO: Replace src with your dashboard/home icon.
-        e.g. src="pics_icons/home-page.png"
-      -->
-      <img class="menu-icon" alt="" src="pics_icons/home-page.png"/>
-      <span class="menu">Dashboard</span>
-    </a>
-
-    <!-- POS -->
-    <a href="pos.php" class="menus2">
-      <!--
-        TODO: Replace src with your POS/cashier icon.
-        e.g. src="pics_icons/cash-register.svg"
-      -->
-      <img class="menu-icon" alt="" src="pics_icons/cash-register (2).svg"/>
-      <span class="menu">POS</span>
-    </a>
-
-    <!-- INVENTORY -->
-    <section class="inventory-container">
-      <div class="inventory-label">INVENTORY</div>
-      <a href="manage-products.php" class="menus2">
-        <!--
-          TODO: Replace src with your manage-products icon.
-          e.g. src="pics_icons/inventory-alt.svg"
-        -->
-        <img class="menu-icon" alt="" src="pics_icons/inventory-alt (1).svg"/>
-        <span class="menu">Manage Products</span>
-      </a>
-      <a href="restock.php" class="menus2">
-        <!--
-          TODO: Replace src with your restock icon.
-          e.g. src="pics_icons/box-add.svg"
-        -->
-        <img class="menu-icon" alt="" src="pics_icons/box-add (1).svg"/>
-        <span class="menu">Restock</span>
-      </a>
-    </section>
-
-    <!-- SALES -->
-    <section class="inventory-container">
-      <div class="inventory-label">SALES</div>
-      <a href="sales.php" class="menus2 active">
-        <!--
-          TODO: Replace src with your sales/money icon.
-          e.g. src="pics_icons/money.png"
-        -->
-        <img class="menu-icon" alt="" src="pics_icons/money (2).png"/>
-        <span class="menu">Sales Analytics</span>
-      </a>
-    </section>
-
-    <!-- CUSTOMER CREDIT -->
-    <section class="inventory-container">
-      <div class="inventory-label">CUSTOMER CREDIT</div>
-      <a href="customers.php" class="menus2">
-        <!--
-          TODO: Replace src with your credit-card icon.
-          e.g. src="pics_icons/credit-card-buyer.svg"
-        -->
-        <img class="menu-icon" alt="" src="pics_icons/credit-card-buyer.svg"/>
-        <span class="menu">Manage Customers</span>
-      </a>
-    </section>
-
-    <!-- USER / LOGOUT -->
-    <section class="logout-container">
-      <div class="owner-container">
-        <div class="owner-card">
-          <div class="image-parent">
-            <div class="image"></div>
-            <!--
-              TODO: Replace src with your store icon.
-              e.g. src="pics_icons/store.png"
-            -->
-            <img class="store-icon" alt="" src="pics_icons/store.png"/>
-          </div>
-          <div class="owner-details">
-            <div class="owner-name"><?= htmlspecialchars($_SESSION['username'] ?? 'User') ?></div>
-            <div class="owner-store"><?= htmlspecialchars($_SESSION['store_name'] ?? '') ?></div>
-          </div>
-        </div>
-      </div>
-      <form method="post" action="logout.php" style="align-self:stretch;">
-        <button type="submit" class="menus7">
-          <!--
-            TODO: Replace src with your logout icon.
-            e.g. src="pics_icons/exit.svg"
-          -->
-          <img class="menu-icon" alt="" src="pics_icons/exit.svg"/>
-          <span class="menu6">Log out</span>
-        </button>
-      </form>
-    </section>
-
-  </aside><!-- /sidebar -->
+  <?php $activePage = 'dashboard'; include 'sidebar.php'; ?>
 
   <!-- ===================================================
        MAIN BODY
@@ -297,11 +187,13 @@ $chartValuesJson = json_encode($chartValues);
           <div class="cards-row">
             <!-- Gross Sales -->
             <div class="stat-card lavender">
-              <!--
-                TODO: Replace src with your money-bag / gross sales icon.
-                e.g. src="pics_icons/Group-494.svg"
-              --><i class="bi bi-cash-stack"></i>
-              <img class="card-icon" alt="" src="pics_icons/.svg"/>
+              <div class="card-icon-wrap icon-blue">
+                <!--
+                  TODO: Replace src with your gross sales icon.
+                  e.g. src="pics_icons/Group-494.svg"
+                -->
+                <img class="card-icon" alt="" src="pics_icons/Group-494.svg"/>
+              </div>
               <div class="card-text">
                 <span class="card-label">Gross Sales</span>
                 <h3 class="card-value">₱<?= number_format((float) s('total_revenue'), 0) ?></h3>
@@ -310,12 +202,13 @@ $chartValuesJson = json_encode($chartValues);
 
             <!-- Profit -->
             <div class="stat-card cream">
-              <!--
-                TODO: Replace src with your profit icon.
-                e.g. src="pics_icons/Group-494.svg"
-              -->
-                
-              <img class="card-icon" alt="" src="pics_icons/usd-circle.png"/>
+              <div class="card-icon-wrap icon-yellow">
+                <!--
+                  TODO: Replace src with your profit icon.
+                  e.g. src="pics_icons/Group-494.svg"
+                -->
+                <img class="card-icon" alt="" src="pics_icons/Group-494.svg"/>
+              </div>
               <div class="card-text">
                 <span class="card-label">Profit</span>
                 <h3 class="card-value">₱<?= number_format((float) s('gross_profit'), 0) ?></h3>
@@ -327,11 +220,13 @@ $chartValuesJson = json_encode($chartValues);
           <div class="cards-row">
             <!-- Cash Sales -->
             <div class="stat-card green-card">
-              <!--
-                TODO: Replace src with your cash-sales icon.
-                e.g. src="pics_icons/Group-494.svg"
-              -->
-              <img class="card-icon" alt="" src="pics_icons/Group-494.svg"/>
+              <div class="card-icon-wrap icon-green">
+                <!--
+                  TODO: Replace src with your cash-sales icon.
+                  e.g. src="pics_icons/Group-494.svg"
+                -->
+                <img class="card-icon" alt="" src="pics_icons/Group-494.svg"/>
+              </div>
               <div class="card-text">
                 <span class="card-label">Cash Sales</span>
                 <h3 class="card-value">₱<?= number_format((float) ($payRow['cash_revenue'] ?? 0), 0) ?></h3>
@@ -340,11 +235,13 @@ $chartValuesJson = json_encode($chartValues);
 
             <!-- Online / Credit Sales -->
             <div class="stat-card cream">
-              <!--
-                TODO: Replace src with your online/gcash icon.
-                e.g. src="pics_icons/Group-494.svg"
-              -->
-              <img class="card-icon" alt="" src="pics_icons/Group-494.svg"/>
+              <div class="card-icon-wrap icon-yellow">
+                <!--
+                  TODO: Replace src with your online/gcash icon.
+                  e.g. src="pics_icons/Group-494.svg"
+                -->
+                <img class="card-icon" alt="" src="pics_icons/Group-494.svg"/>
+              </div>
               <div class="card-text">
                 <span class="card-label">Online Sales<br>(G-Cash)</span>
                 <h3 class="card-value">₱<?= number_format((float) ($payRow['credit_revenue'] ?? 0), 0) ?></h3>
@@ -364,11 +261,13 @@ $chartValuesJson = json_encode($chartValues);
               <!-- Row 1: Total Items Sold | Today's Sales -->
               <div class="status-row">
                 <div class="status-card cream">
-                  <!--
-                    TODO: Replace src with your items-sold icon.
-                    e.g. src="pics_icons/Group-494.svg"
-                  -->
-                  <img class="card-icon" alt="" src="pics_icons/Group-494.svg"/>
+                  <div class="card-icon-wrap icon-yellow">
+                    <!--
+                      TODO: Replace src with your items-sold icon.
+                      e.g. src="pics_icons/Group-494.svg"
+                    -->
+                    <img class="card-icon" alt="" src="pics_icons/Group-494.svg"/>
+                  </div>
                   <div class="card-text">
                     <span class="card-label">Total Items Sold</span>
                     <h3 class="card-value items">
@@ -378,11 +277,13 @@ $chartValuesJson = json_encode($chartValues);
                 </div>
 
                 <div class="status-card lavender">
-                  <!--
-                    TODO: Replace src with your today's-sales / calendar icon.
-                    e.g. src="pics_icons/Group-494.svg"
-                  -->
-                  <img class="card-icon" alt="" src="pics_icons/Group-494.svg"/>
+                  <div class="card-icon-wrap icon-blue">
+                    <!--
+                      TODO: Replace src with your today's-sales / calendar icon.
+                      e.g. src="pics_icons/Group-494.svg"
+                    -->
+                    <img class="card-icon" alt="" src="pics_icons/Group-494.svg"/>
+                  </div>
                   <div class="card-text">
                     <span class="card-label">Today's Sales</span>
                     <h3 class="card-value">₱<?= number_format((float) ($todayRow['todays_revenue'] ?? 0), 0) ?></h3>
@@ -393,11 +294,13 @@ $chartValuesJson = json_encode($chartValues);
               <!-- Row 2: Sales this Month (full width) -->
               <div class="status-bottom">
                 <div class="status-card cream full-width">
-                  <!--
-                    TODO: Replace src with your monthly-sales icon.
-                    e.g. src="pics_icons/Group-494.svg"
-                  -->
-                  <img class="card-icon" alt="" src="pics_icons/Group-494.svg"/>
+                  <div class="card-icon-wrap icon-yellow">
+                    <!--
+                      TODO: Replace src with your monthly-sales icon.
+                      e.g. src="pics_icons/Group-494.svg"
+                    -->
+                    <img class="card-icon" alt="" src="pics_icons/Group-494.svg"/>
+                  </div>
                   <div class="card-text">
                     <span class="card-label">Sales this Month</span>
                     <h3 class="card-value items">₱<?= number_format((float) ($monthRow['month_revenue'] ?? 0), 0) ?></h3>

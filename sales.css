@@ -328,10 +328,30 @@
   gap: var(--gap-15);
 }
 
-.stat-card .card-icon {
-  /* TODO: replace each card-icon src with your icon paths */
+/* Icon circle wrapper — matches dashboard's .stat-icon pattern */
+.card-icon-wrap {
   width: var(--width-70);
   height: var(--height-70);
+  border-radius: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Color variants — matching dashboard icon colours */
+.card-icon-wrap.icon-blue   { background-color: rgba(37, 131, 194, 0.80); }
+.card-icon-wrap.icon-yellow { background-color: var(--yellow); }
+.card-icon-wrap.icon-green  { background-color: rgba(21, 148, 89, 0.80); }
+.card-icon-wrap.icon-gray   { background-color: rgba(62, 44, 35, 0.80); }
+.card-icon-wrap.icon-orange { background-color: #ff8d28; }
+.card-icon-wrap.icon-red    { background-color: rgba(235, 69, 58, 0.80); }
+
+.stat-card .card-icon,
+.status-card .card-icon {
+  /* TODO: replace each card-icon src with your icon paths */
+  width: 33px;
+  height: 33px;
   object-fit: contain;
   flex-shrink: 0;
 }
@@ -451,14 +471,6 @@
   box-shadow: var(--shadow-drop-1);
   backdrop-filter: blur(45px);
   background-color: var(--color-lavender);
-}
-
-.status-card .card-icon {
-  /* TODO: replace src with appropriate icon path */
-  width: var(--width-70);
-  height: var(--height-70);
-  object-fit: contain;
-  flex-shrink: 0;
 }
 
 .status-card .card-text {

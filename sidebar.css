@@ -1,5 +1,8 @@
 /* sidebar.css */
 
+/* ============================================================
+   SIDEBAR SHELL
+   ============================================================ */
 .sidebar {
   width: 260px;
   min-width: 260px;
@@ -41,13 +44,17 @@
 }
 
 .listahub-logo {
-  width: 100%;
+  /*
+    TODO: set src to your logo image.
+    e.g. src="pics_icons/ListaHub-logo-2-1.png"
+  */
   max-width: 210px;
+  width: 100%;
   height: 100%;
   object-fit: contain;
 }
 
-/* ── Menu item base ── */
+/* ── Menu items base ── */
 .menus,
 .menus2 {
   align-self: stretch;
@@ -61,52 +68,55 @@
   cursor: pointer;
   transition: background 0.18s ease, border 0.18s ease;
   font-family: var(--font-inter);
+  box-sizing: border-box;
 }
 
-/* Dashboard menu – yellow highlight when active */
+/* Dashboard – transparent base, yellow when active */
 .menus {
   background-color: transparent;
   border: 2px solid transparent;
   box-shadow:
     -15px -13px 6px transparent inset,
-    -10px -8px 5px rgba(44,44,44,0.01) inset,
-    -5px  -5px 4px rgba(44,44,44,0.03) inset,
-    -2px  -2px 3px rgba(44,44,44,0.04) inset,
-    -1px  -1px 2px rgba(44,44,44,0.05) inset;
+    -10px -8px  5px rgba(44, 44, 44, 0.01) inset,
+    -5px  -5px  4px rgba(44, 44, 44, 0.03) inset,
+    -2px  -2px  3px rgba(44, 44, 44, 0.04) inset,
+    -1px  -1px  2px rgba(44, 44, 44, 0.05) inset;
 }
 
 .menus.active {
   background-color: var(--yellow);
-  border: 2px solid rgba(43,43,43,0.15);
+  border: 2px solid rgba(43, 43, 43, 0.15);
 }
 
-.menus:hover {
+.menus:hover:not(.active) {
   background-color: rgba(235, 214, 101, 0.45);
 }
 
-/* Other nav items */
+/* All other nav links */
 .menus2 {
   background-color: transparent;
-  border: none;
+  border: 2px solid transparent;
 }
 
 .menus2.active {
   background-color: var(--yellow);
-  border: 2px solid rgba(43,43,43,0.15);
+  border: 2px solid rgba(43, 43, 43, 0.15);
 }
 
-.menus2:hover {
-  background-color: rgba(235, 214, 101, 0.3);
+.menus2:hover:not(.active) {
+  background-color: rgba(235, 214, 101, 0.30);
 }
 
+/* Icon inside any menu link */
 .menu-icon {
   width: var(--width-24);
   height: var(--width-24);
   flex-shrink: 0;
+  object-fit: contain;
 }
 
+/* Label text inside any menu link */
 .menu {
-  position: relative;
   font-size: var(--fs-16);
   letter-spacing: -0.04em;
   font-weight: 500;
@@ -114,7 +124,7 @@
   color: var(--color-black);
 }
 
-/* ── Section labels ── */
+/* ── Section group (INVENTORY / SALES / CUSTOMER CREDIT) ── */
 .inventory-container {
   align-self: stretch;
   overflow: hidden;
@@ -126,13 +136,13 @@
 }
 
 .inventory-label {
-  position: relative;
-  letter-spacing: -0.02em;
-  font-weight: 700;
   font-size: 12px;
-  color: rgba(62,44,35,0.6);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: rgba(62, 44, 35, 0.60);
   padding-left: 4px;
   text-transform: uppercase;
+  position: relative;
 }
 
 /* ── Logout / Owner area ── */
@@ -165,24 +175,30 @@
   gap: 12px;
   display: flex;
   align-items: center;
-  background: rgba(255,255,255,0.25);
+  background: rgba(255, 255, 255, 0.25);
 }
 
+/* Avatar circle + store icon */
 .image-parent {
   position: relative;
   isolation: isolate;
   flex-shrink: 0;
+  width: 46px;
+  height: 46px;
 }
 
 .image {
-  height: 46px;
   width: 46px;
+  height: 46px;
   border-radius: 50%;
   background-color: var(--color-cornsilk);
-  z-index: 0;
 }
 
 .store-icon {
+  /*
+    TODO: set src to your store icon.
+    e.g. src="pics_icons/store.png"
+  */
   width: 30px;
   height: 30px;
   position: absolute;
@@ -190,8 +206,10 @@
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 1;
+  object-fit: contain;
 }
 
+/* User name / store name */
 .owner-details {
   flex: 1;
   overflow: hidden;
@@ -204,10 +222,9 @@
 
 .owner-name {
   width: 100%;
-  position: relative;
   font-size: 14px;
-  letter-spacing: -0.04em;
   font-weight: 700;
+  letter-spacing: -0.04em;
   color: var(--color-gray-100);
   white-space: nowrap;
   overflow: hidden;
@@ -216,11 +233,10 @@
 
 .owner-store {
   width: 100%;
-  position: relative;
   font-size: 12px;
-  letter-spacing: -0.04em;
   font-weight: 500;
-  color: rgba(62,44,35,0.7);
+  letter-spacing: -0.04em;
+  color: rgba(62, 44, 35, 0.70);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -229,7 +245,7 @@
 /* Logout button */
 .menus7 {
   cursor: pointer;
-  border: 1px solid rgba(43,43,43,0.2);
+  border: 1px solid rgba(43, 43, 43, 0.20);
   padding: var(--padding-10) var(--padding-20);
   background-color: transparent;
   align-self: stretch;
@@ -239,16 +255,16 @@
   align-items: center;
   justify-content: center;
   gap: var(--gap-10);
-  transition: background 0.18s;
+  transition: background 0.18s, border-color 0.18s;
+  font-family: var(--font-inter);
 }
 
 .menus7:hover {
   background-color: rgba(235, 69, 58, 0.12);
-  border-color: rgba(235,69,58,0.4);
+  border-color: rgba(235, 69, 58, 0.40);
 }
 
 .menu6 {
-  position: relative;
   font-size: var(--fs-15);
   letter-spacing: -0.04em;
   font-weight: 500;
