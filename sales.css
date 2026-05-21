@@ -51,8 +51,8 @@ body {
   border-radius: 15px;
   background: linear-gradient(146.01deg, rgba(253,253,253,0.6), rgba(254,246,227,0.6) 38.94%, rgba(255,244,216,0.6));
   /* HARDCODED visible border — no variable */
-  border: 1px solid rgba(62, 44, 35, 0.30);
-  box-shadow: 1px 2px 20px rgba(62, 44, 35, 0.12);
+  border: var(--border-2);
+  
   padding: 18px 19px;
   display: flex;
   flex-direction: column;
@@ -101,7 +101,7 @@ body {
   padding: 12px 14px;
   border-radius: 20px;
   /* HARDCODED */
-  border: 1px solid rgba(62, 44, 35, 0.15);
+  border: var(--border-3);
   box-sizing: border-box;
   gap: 12px;
 }

@@ -21,7 +21,7 @@ $activePage = $activePage ?? '';
   </section>
 
   <!-- ===== DASHBOARD ===== -->
-  <a href="dashboard.php" class="menus <?= $activePage === 'dashboard' ? 'active' : '' ?>">
+  <a href="dashboard.php" class="menus2 <?= $activePage === 'dashboard' ? 'active' : '' ?>">
     <!--
       TODO: Replace src with your home/dashboard icon.
       e.g. src="pics_icons/home-page.png"

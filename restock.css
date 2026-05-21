@@ -77,7 +77,7 @@ body {
 .overview-section {
   border-radius: var(--br-15);
   background: var(--gradient-1);
-  border: var(--border-4);
+  border: var(--border-2);
   padding: var(--padding-15) var(--padding-20);
   display: flex;
   flex-direction: column;
@@ -100,7 +100,7 @@ body {
   flex: 1;
   min-width: 170px;
   border-radius: var(--br-20);
-  border: var(--border-2);
+  border: var(--border-3);
   box-shadow: var(--shadow-drop);
   padding: var(--padding-14) var(--padding-10);
   display: flex;

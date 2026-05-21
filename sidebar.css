@@ -55,7 +55,6 @@
 }
 
 /* ── Menu items base ── */
-.menus,
 .menus2 {
   align-self: stretch;
   display: flex;

@@ -101,10 +101,11 @@ body {
   */
   --border-section: 1px solid rgba(62, 44, 35, 0.25);   /* visible panel outline */
   --border-card:    1px solid rgba(62, 44, 35, 0.12);   /* inner card outline    */
-  --border-1:       1px solid rgba(62, 44, 35, 0.12);   /* legacy alias          */
-  --border-2:       1px solid var(--1-brown);
-  --border-3:       1px solid var(--color-white);
-  --border-4:       1px dashed rgba(62, 44, 35, 0.20);
+  --border-1: 1px solid var(--color-gray-500);
+  --border-2: 1px solid var(--1-brown);
+  --border-3: 1px solid var(--color-white);
+  --border-4: 1px dashed var(--color-gainsboro);
+  --border-green: 1px solid var(--green);
 
   /* Shadows */
   --shadow-drop:   1px 2px 20.6px rgba(62, 44, 35, 0.10);
