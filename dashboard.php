@@ -186,12 +186,9 @@ $activePage = 'dashboard';
             <!-- Expired Products -->
             <div class="stat-card linen-bg">
               <div class="stat-icon icon-orange">
-                <!--
-                  NOTE: Replace with your expired products icon image, e.g.:
-                  <img src="./public/expired-icon.svg" width="33" alt="Expired"/>
-                  Fallback Bootstrap Icon shown below:
-                -->
-                <i class="bi bi-exclamation-circle"></i>
+
+                  <img src="pics_icons/expired.png" width="33" alt="Expired"/>
+            
               </div>
               <div class="stat-info">
                 <span class="stat-label">Expired Products</span>
@@ -217,12 +214,9 @@ $activePage = 'dashboard';
             <!-- Near Expiration -->
             <div class="stat-card cream-bg">
               <div class="stat-icon icon-gray">
-                <!--
-                  NOTE: Replace with your near expiry icon image, e.g.:
-                  <img src="./public/near-expiry-icon.svg" width="33" alt="Near Expiry"/>
-                  Fallback Bootstrap Icon shown below:
-                -->
-                <i class="bi bi-hourglass-split"></i>
+
+                  <img src="pics_icons/duration-alt.png" width="33" alt="Near Expiry"/>
+
               </div>
               <div class="stat-info">
                 <span class="stat-label">Near Expiration</span>

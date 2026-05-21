@@ -183,11 +183,9 @@ $activePage = 'manage-products';
         <!-- Out of Stocks -->
         <div class="stat-card card-red">
           <div class="stat-icon icon-red">
-            <!--
-              NOTE: Replace the <i> below with your icon image, e.g.:
-              <img src="./pics_icons/out-of-stock-icon.png" width="33" height="33" alt="Out of Stock"/>
-            -->
-            <i class="bi bi-box-seam" style="font-size:28px;"></i>
+           
+              <img src="./pics_icons/out-of-stock (1).png" width="33" height="33" alt="Out of Stock"/>
+            
           </div>
           <div class="stat-text">
             <span class="stat-label">Out of Stocks</span>
@@ -198,11 +196,9 @@ $activePage = 'manage-products';
         <!-- Expired Products -->
         <div class="stat-card card-orange">
           <div class="stat-icon icon-orange">
-            <!--
-              NOTE: Replace the <i> below with your icon image, e.g.:
-              <img src="./pics_icons/expired-icon.png" width="33" height="33" alt="Expired"/>
-            -->
-            <i class="bi bi-x-circle" style="font-size:28px;"></i>
+
+              <img src="./pics_icons/expired.png" width="33" height="33" alt="Expired"/>
+            
           </div>
           <div class="stat-text">
             <span class="stat-label">Expired Products</span>
@@ -213,11 +209,9 @@ $activePage = 'manage-products';
         <!-- Low on Stock -->
         <div class="stat-card card-yellow">
           <div class="stat-icon icon-gray">
-            <!--
-              NOTE: Replace the <i> below with your icon image, e.g.:
-              <img src="./pics_icons/low-stock-icon.png" width="33" height="33" alt="Low Stock"/>
-            -->
-            <i class="bi bi-arrow-down-circle" style="font-size:28px;"></i>
+
+            <img src="pics_icons/arrow-trend-down.png" width="33" alt="Low Stock"/>
+
           </div>
           <div class="stat-text">
             <span class="stat-label">Low on Stock</span>
@@ -228,11 +222,9 @@ $activePage = 'manage-products';
         <!-- Near Expiry -->
         <div class="stat-card card-blue">
           <div class="stat-icon icon-blue">
-            <!--
-              NOTE: Replace the <i> below with your icon image, e.g.:
-              <img src="./pics_icons/near-expiry-icon.png" width="33" height="33" alt="Near Expiry"/>
-            -->
-            <i class="bi bi-exclamation-circle" style="font-size:28px;"></i>
+            
+            <img src="pics_icons/duration-alt.png" width="33" alt="Near Expiry"/>
+
           </div>
           <div class="stat-text">
             <span class="stat-label">Near Expiry</span>
@@ -278,21 +270,17 @@ $activePage = 'manage-products';
               Add Product button — opens add_prod.php as a popup window.
             -->
             <button class="btn-add-product" type="button" onclick="openAddProductPopup()">
-              <!--
-                NOTE: Replace with your icon image, e.g.:
-                <img src="./pics_icons/gg-add.svg" class="btn-icon" alt=""/>
-              -->
-              <i class="bi bi-plus-circle btn-icon"></i>
+              
+                <img src="./pics_icons/add (1).svg" class="btn-icon" alt=""/>
+              
               <span>Add Product</span>
             </button>
 
             <!-- Bulk Restock — navigates to restock.php -->
             <a href="restock.php" class="btn-outline">
-              <!--
-                NOTE: Replace with your icon image, e.g.:
-                <img src="./pics_icons/basil-box-outline.svg" class="btn-icon" alt=""/>
-              -->
-              <i class="bi bi-box btn-icon"></i>
+             
+                <img src="./pics_icons/supplies.png" class="btn-icon" alt=""/>
+              
               <span>Bulk Restock</span>
             </a>
 

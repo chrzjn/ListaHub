@@ -63,7 +63,7 @@ $activePage = $activePage ?? '';
     </a>
 
     <!-- ★ NEW: Inventory History ★ -->
-    <a href="inventory-history.php" class="menus2 <?= $activePage === 'inventory-history' ? 'active' : '' ?>">
+    <a href="inv_history.php" class="menus2 <?= $activePage === 'inv_history' ? 'active' : '' ?>">
       <!--
         TODO: Replace src with your inventory-history / clock-history icon.
         e.g. src="pics_icons/material-symbols-history-rounded.svg"
