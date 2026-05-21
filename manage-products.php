@@ -5,6 +5,16 @@
 //  Add Product opens as an INLINE OVERLAY (no popup window).
 //  Edit opens as popup page (update_prod.php).
 //  Requirements: Prepared statements, try-catch, session guard
+//
+//  FIXES:
+//    1. Category INSERT uses INSERT IGNORE + re-fetch so a
+//       duplicate-key race condition never crashes the page.
+//    2. $cat_id validated > 0 before Product INSERT to prevent
+//       FK violation with a clear user-facing error.
+//    3. SKU fetch after add removed — SKU is now set by the
+//       BEFORE INSERT trigger atomically; just fetch it once.
+//    4. Error messages slightly more descriptive in dev mode
+//       (toggle DEBUG_MODE below for production).
 // ============================================================
 session_start();
 if (!isset($_SESSION['user_id'])) {
@@ -14,10 +24,13 @@ if (!isset($_SESSION['user_id'])) {
 
 require_once './utils/lhdb.php';
 
-$user_id       = (int) $_SESSION['user_id'];
-$message       = '';
-$error         = '';
-$add_flash_msg = '';
+// Set to false in production to hide raw DB errors from users
+define('DEBUG_MODE', false);
+
+$user_id        = (int) $_SESSION['user_id'];
+$message        = '';
+$error          = '';
+$add_flash_msg  = '';
 $add_flash_type = '';
 
 // ── Handle POST ──────────────────────────────────────────────
@@ -27,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $pdo = getPDO();
 
-        // ── DELETE ──
+        // ── DELETE ──────────────────────────────────────────
         if ($action === 'delete') {
             $product_id = (int) ($_POST['product_id'] ?? 0);
             if ($product_id) {
@@ -38,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $message = 'Product deleted successfully.';
             }
 
-        // ── ADD PRODUCT (inline overlay form) ──
+        // ── ADD PRODUCT ─────────────────────────────────────
         } elseif ($action === 'add') {
             $product_name  = trim($_POST['product_name']    ?? '');
             $category_name = trim($_POST['category']        ?? '');
@@ -55,62 +68,85 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $pdo->beginTransaction();
 
-                // Resolve or create category
+                // ── Resolve or create category ───────────────
+                // Use the pre-seeded 'Uncategorized' (category_id = 1) as fallback.
                 $target_cat = !empty($category_name) ? $category_name : 'Uncategorized';
+
+                // FIX 1: INSERT IGNORE prevents a crash when two concurrent
+                // requests try to create the same category simultaneously.
+                // The SELECT after it always returns the existing row.
+                $insCAT = $pdo->prepare(
+                    "INSERT IGNORE INTO Category (category_name) VALUES (:name)"
+                );
+                $insCAT->execute([':name' => $target_cat]);
+
                 $catStmt = $pdo->prepare(
                     "SELECT category_id FROM Category WHERE category_name = :name LIMIT 1"
                 );
                 $catStmt->execute([':name' => $target_cat]);
                 $cat = $catStmt->fetch();
-                if ($cat) {
-                    $cat_id = $cat['category_id'];
+
+                // FIX 2: Validate we actually got a category_id before proceeding.
+                if (!$cat || (int) $cat['category_id'] <= 0) {
+                    $pdo->rollBack();
+                    $add_flash_msg  = 'Could not resolve product category. Please try again.';
+                    $add_flash_type = 'error';
                 } else {
-                    $insCAT = $pdo->prepare("INSERT INTO Category (category_name) VALUES (:name)");
-                    $insCAT->execute([':name' => $target_cat]);
-                    $cat_id = (int) $pdo->lastInsertId();
+                    $cat_id = (int) $cat['category_id'];
+
+                    $final_expiry = ($no_expiry || empty($expiry_date)) ? null : $expiry_date;
+
+                    // FIX 3: SKU and status are now set by the BEFORE INSERT trigger
+                    // atomically — no need for the old AFTER INSERT UPDATE chain.
+                    $ins = $pdo->prepare(
+                        "INSERT INTO Product
+                            (user_id, category_id, product_name, quantity,
+                             cost_price, retail_price, expiration_date, notes)
+                         VALUES
+                            (:user_id, :category_id, :product_name, :quantity,
+                             :cost_price, :retail_price, :expiry, :notes)"
+                    );
+                    $ins->execute([
+                        ':user_id'      => $user_id,
+                        ':category_id'  => $cat_id,
+                        ':product_name' => $product_name,
+                        ':quantity'     => $quantity,
+                        ':cost_price'   => $cost_price,
+                        ':retail_price' => $retail_price,
+                        ':expiry'       => $final_expiry,
+                        ':notes'        => $notes,
+                    ]);
+
+                    $new_id = (int) $pdo->lastInsertId();
+                    $pdo->commit();
+
+                    // Fetch the SKU that the trigger generated
+                    $skuStmt = $pdo->prepare(
+                        "SELECT sku FROM Product WHERE product_id = :id"
+                    );
+                    $skuStmt->execute([':id' => $new_id]);
+                    $added_sku = $skuStmt->fetchColumn() ?: '';
+
+                    $add_flash_msg  = 'Product "' . htmlspecialchars($product_name) . '" added successfully!' .
+                                      ($added_sku ? ' (SKU: ' . htmlspecialchars($added_sku) . ')' : '');
+                    $add_flash_type = 'success';
                 }
-
-                $final_expiry = ($no_expiry || empty($expiry_date)) ? null : $expiry_date;
-
-                $ins = $pdo->prepare(
-                    "INSERT INTO Product
-                        (user_id, category_id, product_name, quantity, cost_price, retail_price, expiration_date, notes)
-                     VALUES
-                        (:user_id, :category_id, :product_name, :quantity, :cost_price, :retail_price, :expiry, :notes)"
-                );
-                $ins->execute([
-                    ':user_id'      => $user_id,
-                    ':category_id'  => $cat_id,
-                    ':product_name' => $product_name,
-                    ':quantity'     => $quantity,
-                    ':cost_price'   => $cost_price,
-                    ':retail_price' => $retail_price,
-                    ':expiry'       => $final_expiry,
-                    ':notes'        => $notes,
-                ]);
-
-                $new_id = (int) $pdo->lastInsertId();
-                $pdo->commit();
-
-                // Fetch auto-generated SKU
-                $skuStmt = $pdo->prepare("SELECT sku FROM Product WHERE product_id = :id");
-                $skuStmt->execute([':id' => $new_id]);
-                $added_sku = $skuStmt->fetchColumn() ?: '';
-
-                $add_flash_msg  = 'Product "' . htmlspecialchars($product_name) . '" added successfully!' .
-                                  ($added_sku ? ' (SKU: ' . htmlspecialchars($added_sku) . ')' : '');
-                $add_flash_type = 'success';
             }
         }
 
     } catch (PDOException $e) {
-        if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
+        if (isset($pdo) && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
         error_log("Manage products error: " . $e->getMessage());
+
+        $dev_detail = DEBUG_MODE ? ' — ' . $e->getMessage() : '';
+
         if ($action === 'add') {
-            $add_flash_msg  = 'A database error occurred. Please try again.';
+            $add_flash_msg  = 'A database error occurred. Please try again.' . $dev_detail;
             $add_flash_type = 'error';
         } else {
-            $error = 'A database error occurred. Please try again.';
+            $error = 'A database error occurred. Please try again.' . $dev_detail;
         }
     }
 }
@@ -131,9 +167,9 @@ try {
     // Stat cards
     $statsStmt = $pdo->prepare(
         "SELECT
-            SUM(CASE WHEN quantity = 0 THEN 1 ELSE 0 END) AS out_of_stock,
+            SUM(CASE WHEN quantity = 0 THEN 1 ELSE 0 END)                                          AS out_of_stock,
             SUM(CASE WHEN expiration_date < CURDATE() AND expiration_date IS NOT NULL THEN 1 ELSE 0 END) AS expired,
-            SUM(CASE WHEN quantity > 0 AND quantity < low_stock_threshold THEN 1 ELSE 0 END) AS low_stock,
+            SUM(CASE WHEN quantity > 0 AND quantity < low_stock_threshold THEN 1 ELSE 0 END)        AS low_stock,
             SUM(CASE WHEN expiration_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY) THEN 1 ELSE 0 END) AS near_expiry
          FROM Product WHERE user_id = :user_id"
     );
@@ -215,17 +251,30 @@ $activePage = 'manage-products';
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
 
-  <!--
-    Load order:
-      1. global_sidebar.css          — body reset + sidebar CSS variables
-      2. global_manage-products.css  — merged page + add_prod CSS variables
-      3. sidebar.css                 — sidebar component styles
-      4. manage-products.css         — merged page + add_prod overlay styles
-  -->
   <link rel="stylesheet" href="global_sidebar.css"/>
   <link rel="stylesheet" href="global_manage-products.css"/>
   <link rel="stylesheet" href="sidebar.css"/>
   <link rel="stylesheet" href="manage-products.css"/>
+  <style> 
+  .category-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 37px;
+  border-radius: var(--br-10);
+  border: var(--border-1);
+  padding: 8px 16px;
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font-inter);
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  color: var(--1-brown);
+  flex-shrink: 0;
+  appearance: auto;
+}
+</style>
 </head>
 <body>
 
@@ -323,7 +372,6 @@ $activePage = 'manage-products';
 
           <div class="action-btns">
 
-            <!-- ★ Add Product → opens INLINE OVERLAY (no popup window) -->
             <button class="btn-add-product" type="button" onclick="openAddOverlay()">
               <img src="./pics_icons/add (1).svg" class="btn-icon" alt=""/>
               <span>Add Product</span>
@@ -470,10 +518,6 @@ $activePage = 'manage-products';
 
 <!-- ════════════════════════════════════════════════════════════
      ADD PRODUCT OVERLAY
-     Exactly matches the design in add_new_overlay.png.
-     Submits to THIS page via POST (action=add).
-     The X button closes the overlay.
-     Complete saves & keeps overlay open for more entries.
      ════════════════════════════════════════════════════════════ -->
 <div id="add-product-overlay" role="dialog" aria-modal="true" aria-label="Add Product">
 
@@ -540,7 +584,7 @@ $activePage = 'manage-products';
                 type="text"
                 id="product-category"
                 name="category"
-                placeholder="Enter Here"
+                placeholder="Enter Here (leave blank for Uncategorized)"
                 list="cat-list"
                 autocomplete="off"
               />
@@ -665,47 +709,32 @@ $activePage = 'manage-products';
 
 var overlay = document.getElementById('add-product-overlay');
 
-/**
- * openAddOverlay — show the overlay
- */
 function openAddOverlay() {
   overlay.classList.add('is-open');
-  document.body.style.overflow = 'hidden'; // prevent background scroll
+  document.body.style.overflow = 'hidden';
 }
 
-/**
- * closeAddOverlay — hide the overlay (only the X / Cancel trigger this)
- */
 function closeAddOverlay() {
   overlay.classList.remove('is-open');
   document.body.style.overflow = '';
 }
 
-/**
- * Close overlay when clicking the dark backdrop (outside the card)
- */
 overlay.addEventListener('click', function (e) {
-  if (e.target === overlay) {
-    closeAddOverlay();
-  }
+  if (e.target === overlay) { closeAddOverlay(); }
 });
 
-/**
- * Close on Escape key
- */
 document.addEventListener('keydown', function (e) {
   if (e.key === 'Escape' && overlay.classList.contains('is-open')) {
     closeAddOverlay();
   }
 });
 
-/* ── Auto-open overlay if we just processed an add action (success or error) ── */
+/* ── Auto-open overlay after an add attempt (success or error) ── */
 var shouldOpen = <?= $open_overlay ?>;
 if (shouldOpen) {
   openAddOverlay();
 
   <?php if ($add_flash_type === 'success'): ?>
-  /* Reset form fields after successful add so the user can enter another product */
   (function () {
     var form = document.getElementById('add-product-form');
     if (form) {
@@ -717,8 +746,6 @@ if (shouldOpen) {
       var expiryInput = document.getElementById('expiry-date');
       if (expiryInput) expiryInput.disabled = false;
     }
-
-    /* Auto-hide flash after 4 s */
     setTimeout(function () {
       var flash = document.getElementById('add-flash');
       if (flash) { flash.style.transition = 'opacity 0.5s'; flash.style.opacity = '0'; }
@@ -758,7 +785,7 @@ function previewImage(input) {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Edit popup (update_prod.php in a new window — unchanged)
+   Edit popup (update_prod.php)
 ───────────────────────────────────────────────────────────── */
 function openEditPopup(productId) {
   var w    = 820, h = 700;

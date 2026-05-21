@@ -258,11 +258,10 @@ $activePage = 'inv_history';
                             onclick="openDeleteModal(<?= (int)$row['log_id'] ?>, '<?= htmlspecialchars(addslashes($item_name)) ?>')"
                             title="Delete this log entry"
                           >
-                            <!--
-                              TODO: Insert trash icon image here.
-                              e.g. <img src="pics_icons/trash.svg" alt="Delete"/>
-                            -->
-                            🗑
+                           
+                               <img src="pics_icons/trash.svg" alt="Delete"/>
+                            
+                            
                           </button>
                         </div>
 

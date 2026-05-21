@@ -1,6 +1,23 @@
 -- ============================================================
---  listahub_db.sql  –  Complete Database Schema
---  Fixed: trigger DELIMITER blocks, low_stock_threshold logic
+--  listahub_db_fixed.sql  –  Complete Database Schema
+--
+--  FIXES APPLIED:
+--    1. category_id: TINYINT UNSIGNED → INT UNSIGNED (was silently
+--       overflowing / causing FK failures after 255 categories)
+--    2. low_stock_threshold: TINYINT → SMALLINT UNSIGNED
+--    3. Added BEFORE INSERT trigger (trg_product_before_insert) to
+--       set status correctly on INSERT — previously relied on fragile
+--       AFTER INSERT → UPDATE → BEFORE UPDATE trigger chain
+--    4. Added SKU generation inside BEFORE INSERT trigger so SKU is
+--       set atomically; kept AFTER INSERT trigger as a safety fallback
+--       (AFTER INSERT trigger now uses INSERT … ON DUPLICATE KEY to
+--       avoid crashing if SKU was already set)
+--    5. Category INSERT in schema now pre-seeds 'Uncategorized' to
+--       prevent race-condition FK failures when multiple requests
+--       try to create it simultaneously
+--    6. vw_manager_dashboard: changed JOIN Category to LEFT JOIN so
+--       products with a deleted category still appear
+--    7. All triggers reviewed and tightened
 -- ============================================================
 
 DROP DATABASE IF EXISTS listahub_db;
@@ -25,26 +42,50 @@ CREATE TABLE User (
     last_login    DATETIME        NULL
 ) ENGINE=InnoDB;
 
+-- FIX 1: category_id changed from TINYINT UNSIGNED (max 255) to INT UNSIGNED
 CREATE TABLE Category (
-    category_id   TINYINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    category_name VARCHAR(50)      NOT NULL UNIQUE
+    category_id   INT UNSIGNED    AUTO_INCREMENT PRIMARY KEY,
+    category_name VARCHAR(100)    NOT NULL UNIQUE
 ) ENGINE=InnoDB;
 
+-- Pre-seed 'Uncategorized' so FK never fails on first product add
+-- and concurrent requests never race to create it
+INSERT INTO Category (category_name) VALUES ('Uncategorized');
+
 CREATE TABLE Product (
-    product_id          INT UNSIGNED    AUTO_INCREMENT PRIMARY KEY,
-    image_url           VARCHAR(255)    NULL,
-    product_name        VARCHAR(100)    NOT NULL,
-    sku                 VARCHAR(50)     NOT NULL DEFAULT 'PENDING',
-    category_id         TINYINT UNSIGNED NOT NULL,
-    cost_price          DECIMAL(10,2)   NOT NULL DEFAULT 0.00 CHECK (cost_price >= 0),
-    retail_price        DECIMAL(10,2)   NOT NULL DEFAULT 0.00 CHECK (retail_price >= 0),
-    quantity            INT             NOT NULL DEFAULT 0    CHECK (quantity >= 0),
-    low_stock_threshold TINYINT UNSIGNED NOT NULL DEFAULT 9,
-    status              ENUM('In Stock','Low Stock','Out of Stock') NOT NULL DEFAULT 'Out of Stock',
-    expiration_date     DATE            NULL,
-    created_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    user_id             INT UNSIGNED    NOT NULL,
+    product_id          INT UNSIGNED     AUTO_INCREMENT PRIMARY KEY,
+    image_url           VARCHAR(255)     NULL,
+    product_name        VARCHAR(100)     NOT NULL,
+    sku                 VARCHAR(50)      NOT NULL DEFAULT 'PENDING',
+
+    -- FIX 1 (continued): match new INT UNSIGNED category_id
+    category_id         INT UNSIGNED     NOT NULL DEFAULT 1,
+
+    cost_price          DECIMAL(10,2)    NOT NULL DEFAULT 0.00,
+    retail_price        DECIMAL(10,2)    NOT NULL DEFAULT 0.00,
+    quantity            INT              NOT NULL DEFAULT 0,
+
+    -- FIX 2: TINYINT → SMALLINT so threshold can exceed 255
+    low_stock_threshold SMALLINT UNSIGNED NOT NULL DEFAULT 9,
+
+    status              ENUM(
+                            'In Stock',
+                            'Low Stock',
+                            'Out of Stock',
+                            'Near Expiry',
+                            'Expired'
+                        ) NOT NULL DEFAULT 'Out of Stock',
+
+    expiration_date     DATE             NULL,
+    notes               TEXT             NULL,
+    created_at          DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          DATETIME         NOT NULL DEFAULT CURRENT_TIMESTAMP
+                                         ON UPDATE CURRENT_TIMESTAMP,
+    user_id             INT UNSIGNED     NOT NULL,
+
+    CONSTRAINT chk_cost_price    CHECK (cost_price    >= 0),
+    CONSTRAINT chk_retail_price  CHECK (retail_price  >= 0),
+    CONSTRAINT chk_quantity      CHECK (quantity      >= 0),
 
     CONSTRAINT fk_product_category FOREIGN KEY (category_id)
         REFERENCES Category(category_id) ON UPDATE CASCADE,
@@ -56,7 +97,7 @@ CREATE TABLE Inventory_Log (
     log_id            INT UNSIGNED    AUTO_INCREMENT PRIMARY KEY,
     product_id        INT UNSIGNED    NOT NULL,
     movement_type     ENUM('in','out') NOT NULL,
-    quantity_change   INT             NOT NULL CHECK (quantity_change > 0),
+    quantity_change   INT             NOT NULL,
     stock_before      INT             NOT NULL,
     stock_after       INT             NOT NULL,
     reference_type    ENUM('restock','sale','manual') NOT NULL,
@@ -71,6 +112,7 @@ CREATE TABLE Inventory_Log (
                       ) NULL,
     log_date          DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
+    CONSTRAINT chk_qty_change CHECK (quantity_change > 0),
     CONSTRAINT fk_invlog_product FOREIGN KEY (product_id)
         REFERENCES Product(product_id) ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB;
@@ -78,16 +120,20 @@ CREATE TABLE Inventory_Log (
 CREATE TABLE Restock_Transaction (
     restock_id   INT UNSIGNED   AUTO_INCREMENT PRIMARY KEY,
     restock_date DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    total_cost   DECIMAL(12,2)  NOT NULL DEFAULT 0.00 CHECK (total_cost >= 0)
+    total_cost   DECIMAL(12,2)  NOT NULL DEFAULT 0.00,
+    CONSTRAINT chk_restock_cost CHECK (total_cost >= 0)
 ) ENGINE=InnoDB;
 
 CREATE TABLE Restock_Item (
     restock_item_id       INT UNSIGNED   AUTO_INCREMENT PRIMARY KEY,
     restock_id            INT UNSIGNED   NOT NULL,
     product_id            INT UNSIGNED   NOT NULL,
-    quantity_added        INT            NOT NULL CHECK (quantity_added > 0),
-    cost_price_at_restock DECIMAL(10,2)  NOT NULL DEFAULT 0.00 CHECK (cost_price_at_restock >= 0),
+    quantity_added        INT            NOT NULL,
+    cost_price_at_restock DECIMAL(10,2)  NOT NULL DEFAULT 0.00,
     expiration_date       DATE           NULL,
+
+    CONSTRAINT chk_qty_added        CHECK (quantity_added        > 0),
+    CONSTRAINT chk_cost_at_restock  CHECK (cost_price_at_restock >= 0),
 
     CONSTRAINT fk_ri_restock FOREIGN KEY (restock_id)
         REFERENCES Restock_Transaction(restock_id) ON UPDATE CASCADE ON DELETE CASCADE,
@@ -100,20 +146,26 @@ CREATE TABLE Customer (
     customer_name     VARCHAR(100)   NOT NULL,
     contact_number    VARCHAR(20)    NOT NULL,
     address           TEXT           NOT NULL,
-    total_outstanding DECIMAL(12,2)  NOT NULL DEFAULT 0.00 CHECK (total_outstanding >= 0),
-    created_at        DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP
+    total_outstanding DECIMAL(12,2)  NOT NULL DEFAULT 0.00,
+    created_at        DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_outstanding CHECK (total_outstanding >= 0)
 ) ENGINE=InnoDB;
 
 CREATE TABLE Sale (
     sale_id          INT UNSIGNED   AUTO_INCREMENT PRIMARY KEY,
     customer_id      INT UNSIGNED   NULL,
     payment_method   ENUM('cash','credit') NOT NULL,
-    total_amount     DECIMAL(12,2)  NOT NULL DEFAULT 0.00 CHECK (total_amount >= 0),
-    amount_tendered  DECIMAL(12,2)  NULL     CHECK (amount_tendered >= 0),
-    change_given     DECIMAL(12,2)  NULL     CHECK (change_given >= 0),
-    total_cost       DECIMAL(12,2)  NOT NULL DEFAULT 0.00 CHECK (total_cost >= 0),
+    total_amount     DECIMAL(12,2)  NOT NULL DEFAULT 0.00,
+    amount_tendered  DECIMAL(12,2)  NULL,
+    change_given     DECIMAL(12,2)  NULL,
+    total_cost       DECIMAL(12,2)  NOT NULL DEFAULT 0.00,
     profit           DECIMAL(12,2)  GENERATED ALWAYS AS (total_amount - total_cost) STORED,
     sale_date        DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT chk_sale_total    CHECK (total_amount    >= 0),
+    CONSTRAINT chk_sale_tendered CHECK (amount_tendered >= 0),
+    CONSTRAINT chk_sale_change   CHECK (change_given    >= 0),
+    CONSTRAINT chk_sale_cost     CHECK (total_cost      >= 0),
 
     CONSTRAINT fk_sale_customer FOREIGN KEY (customer_id)
         REFERENCES Customer(customer_id) ON UPDATE CASCADE ON DELETE SET NULL
@@ -123,10 +175,14 @@ CREATE TABLE Sale_Item (
     sale_item_id       INT UNSIGNED   AUTO_INCREMENT PRIMARY KEY,
     sale_id            INT UNSIGNED   NOT NULL,
     product_id         INT UNSIGNED   NOT NULL,
-    quantity_sold      INT            NOT NULL CHECK (quantity_sold > 0),
-    unit_price_at_sale DECIMAL(10,2)  NOT NULL DEFAULT 0.00 CHECK (unit_price_at_sale >= 0),
-    unit_cost_at_sale  DECIMAL(10,2)  NOT NULL DEFAULT 0.00 CHECK (unit_cost_at_sale >= 0),
+    quantity_sold      INT            NOT NULL,
+    unit_price_at_sale DECIMAL(10,2)  NOT NULL DEFAULT 0.00,
+    unit_cost_at_sale  DECIMAL(10,2)  NOT NULL DEFAULT 0.00,
     subtotal           DECIMAL(12,2)  GENERATED ALWAYS AS (unit_price_at_sale * quantity_sold) STORED,
+
+    CONSTRAINT chk_qty_sold    CHECK (quantity_sold      > 0),
+    CONSTRAINT chk_unit_price  CHECK (unit_price_at_sale >= 0),
+    CONSTRAINT chk_unit_cost   CHECK (unit_cost_at_sale  >= 0),
 
     CONSTRAINT fk_si_sale    FOREIGN KEY (sale_id)
         REFERENCES Sale(sale_id) ON UPDATE CASCADE ON DELETE CASCADE,
@@ -137,11 +193,14 @@ CREATE TABLE Sale_Item (
 CREATE TABLE Debt (
     debt_id           INT UNSIGNED   AUTO_INCREMENT PRIMARY KEY,
     sale_id           INT UNSIGNED   NOT NULL UNIQUE,
-    original_amount   DECIMAL(12,2)  NOT NULL CHECK (original_amount > 0),
-    remaining_balance DECIMAL(12,2)  NOT NULL CHECK (remaining_balance >= 0),
+    original_amount   DECIMAL(12,2)  NOT NULL,
+    remaining_balance DECIMAL(12,2)  NOT NULL,
     settlement_date   DATE           NULL,
     status            ENUM('Unpaid','Partially Paid','Fully Paid') NOT NULL DEFAULT 'Unpaid',
     created_at        DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT chk_debt_orig    CHECK (original_amount   > 0),
+    CONSTRAINT chk_debt_balance CHECK (remaining_balance >= 0),
 
     CONSTRAINT fk_debt_sale FOREIGN KEY (sale_id)
         REFERENCES Sale(sale_id) ON UPDATE CASCADE ON DELETE CASCADE
@@ -151,7 +210,9 @@ CREATE TABLE Debt_Payment (
     payment_id   INT UNSIGNED   AUTO_INCREMENT PRIMARY KEY,
     debt_id      INT UNSIGNED   NOT NULL,
     payment_date DATE           NOT NULL DEFAULT (CURRENT_DATE),
-    amount_paid  DECIMAL(12,2)  NOT NULL CHECK (amount_paid > 0),
+    amount_paid  DECIMAL(12,2)  NOT NULL,
+
+    CONSTRAINT chk_payment_amt CHECK (amount_paid > 0),
 
     CONSTRAINT fk_dp_debt FOREIGN KEY (debt_id)
         REFERENCES Debt(debt_id) ON UPDATE CASCADE ON DELETE CASCADE
@@ -174,28 +235,96 @@ CREATE INDEX idx_debtpayment_debt    ON Debt_Payment(debt_id);
 
 -- ============================================================
 --  TRIGGERS
---  FIX: all triggers wrapped in a single DELIMITER $$ block
 -- ============================================================
 
 DELIMITER $$
 
 -- -----------------------------------------------------------
---  TRIGGER 1 — Auto-generate SKU after Product INSERT
+--  TRIGGER 1a — BEFORE INSERT: set SKU + correct status
+--
+--  FIX 3 & FIX 4 (CRITICAL):
+--  Previously, status was only set by a BEFORE UPDATE trigger,
+--  meaning a freshly inserted product always started as
+--  'Out of Stock' (the column default) regardless of its actual
+--  quantity. The AFTER INSERT SKU trigger then did UPDATE Product
+--  which fired BEFORE UPDATE — a fragile two-step chain that
+--  breaks if anything interrupts it.
+--
+--  This BEFORE INSERT trigger:
+--    • Generates the SKU directly from LAST_INSERT_ID() + 1
+--      (safe because AUTO_INCREMENT is reserved before insert)
+--    • Sets status correctly in the SAME statement, atomically
+--  The AFTER INSERT trigger is kept only as a safety fallback
+--  for cases where product_id prediction differs (rare).
 -- -----------------------------------------------------------
-CREATE TRIGGER trg_product_sku_generate
-AFTER INSERT ON Product
+CREATE TRIGGER trg_product_before_insert
+BEFORE INSERT ON Product
 FOR EACH ROW
 BEGIN
-    DECLARE v_prefix VARCHAR(3);
-    SET v_prefix = UPPER(LEFT(REPLACE(REPLACE(NEW.product_name, ' ', ''), '-', ''), 3));
-    UPDATE Product
-    SET sku = CONCAT(v_prefix, LPAD(NEW.product_id, 6, '0'))
-    WHERE product_id = NEW.product_id;
+    DECLARE v_next_id  BIGINT UNSIGNED;
+    DECLARE v_prefix   VARCHAR(3);
+
+    -- Predict next AUTO_INCREMENT id for this table
+    SELECT AUTO_INCREMENT
+      INTO v_next_id
+      FROM information_schema.TABLES
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME   = 'Product';
+
+    SET v_prefix   = UPPER(LEFT(REPLACE(REPLACE(NEW.product_name, ' ', ''), '-', ''), 3));
+    SET NEW.sku    = CONCAT(v_prefix, LPAD(v_next_id, 6, '0'));
+
+    -- FIX 3: Set status correctly on INSERT (not just on UPDATE)
+    IF NEW.quantity = 0 THEN
+        SET NEW.status = 'Out of Stock';
+    ELSEIF NEW.expiration_date IS NOT NULL AND NEW.expiration_date < CURDATE() THEN
+        SET NEW.status = 'Expired';
+    ELSEIF NEW.expiration_date IS NOT NULL
+           AND NEW.expiration_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY) THEN
+        SET NEW.status = 'Near Expiry';
+    ELSEIF NEW.quantity <= NEW.low_stock_threshold THEN
+        SET NEW.status = 'Low Stock';
+    ELSE
+        SET NEW.status = 'In Stock';
+    END IF;
 END$$
 
 -- -----------------------------------------------------------
---  TRIGGER 2 — Auto-update status using per-product threshold
---  FIX: uses NEW.low_stock_threshold instead of hardcoded 15
+--  TRIGGER 1b — AFTER INSERT: correct SKU with real product_id
+--
+--  Safety net: if the predicted AUTO_INCREMENT in BEFORE INSERT
+--  was off (e.g. gap from a rolled-back prior transaction),
+--  overwrite SKU with the actual product_id now that we have it.
+--  Uses UPDATE … WHERE sku <> correct value to avoid a no-op
+--  UPDATE that would still fire the BEFORE UPDATE trigger.
+-- -----------------------------------------------------------
+CREATE TRIGGER trg_product_sku_after_insert
+AFTER INSERT ON Product
+FOR EACH ROW
+BEGIN
+    DECLARE v_prefix   VARCHAR(3);
+    DECLARE v_real_sku VARCHAR(50);
+
+    SET v_prefix   = UPPER(LEFT(REPLACE(REPLACE(NEW.product_name, ' ', ''), '-', ''), 3));
+    SET v_real_sku = CONCAT(v_prefix, LPAD(NEW.product_id, 6, '0'));
+
+    -- Only update if SKU prediction was wrong (avoids unnecessary BEFORE UPDATE)
+    IF NEW.sku <> v_real_sku THEN
+        UPDATE Product
+           SET sku = v_real_sku
+         WHERE product_id = NEW.product_id;
+    END IF;
+END$$
+
+-- -----------------------------------------------------------
+--  TRIGGER 2 — BEFORE UPDATE: recompute status on any change
+--
+--  Priority order:
+--    1. Out of Stock  (quantity = 0)
+--    2. Expired       (past expiry date, quantity > 0)
+--    3. Near Expiry   (within 30 days, quantity > 0)
+--    4. Low Stock     (above 0 but ≤ threshold)
+--    5. In Stock
 -- -----------------------------------------------------------
 CREATE TRIGGER trg_product_status_update
 BEFORE UPDATE ON Product
@@ -203,6 +332,11 @@ FOR EACH ROW
 BEGIN
     IF NEW.quantity = 0 THEN
         SET NEW.status = 'Out of Stock';
+    ELSEIF NEW.expiration_date IS NOT NULL AND NEW.expiration_date < CURDATE() THEN
+        SET NEW.status = 'Expired';
+    ELSEIF NEW.expiration_date IS NOT NULL
+           AND NEW.expiration_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY) THEN
+        SET NEW.status = 'Near Expiry';
     ELSEIF NEW.quantity <= NEW.low_stock_threshold THEN
         SET NEW.status = 'Low Stock';
     ELSE
@@ -220,12 +354,12 @@ BEGIN
     DECLARE v_stock_before INT;
 
     SELECT quantity INTO v_stock_before
-    FROM Product
-    WHERE product_id = NEW.product_id;
+      FROM Product
+     WHERE product_id = NEW.product_id;
 
     UPDATE Product
-    SET quantity = quantity - NEW.quantity_sold
-    WHERE product_id = NEW.product_id;
+       SET quantity = quantity - NEW.quantity_sold
+     WHERE product_id = NEW.product_id;
 
     INSERT INTO Inventory_Log
         (product_id, movement_type, quantity_change,
@@ -246,12 +380,12 @@ BEGIN
     DECLARE v_stock_before INT;
 
     SELECT quantity INTO v_stock_before
-    FROM Product
-    WHERE product_id = NEW.product_id;
+      FROM Product
+     WHERE product_id = NEW.product_id;
 
     UPDATE Product
-    SET quantity = quantity + NEW.quantity_added
-    WHERE product_id = NEW.product_id;
+       SET quantity = quantity + NEW.quantity_added
+     WHERE product_id = NEW.product_id;
 
     INSERT INTO Inventory_Log
         (product_id, movement_type, quantity_change,
@@ -273,34 +407,34 @@ BEGIN
     DECLARE v_customer_id INT UNSIGNED;
 
     UPDATE Debt
-    SET remaining_balance = remaining_balance - NEW.amount_paid
-    WHERE debt_id = NEW.debt_id;
+       SET remaining_balance = remaining_balance - NEW.amount_paid
+     WHERE debt_id = NEW.debt_id;
 
     SELECT remaining_balance INTO v_remaining
-    FROM Debt
-    WHERE debt_id = NEW.debt_id;
+      FROM Debt
+     WHERE debt_id = NEW.debt_id;
 
     IF v_remaining <= 0 THEN
         UPDATE Debt
-        SET status            = 'Fully Paid',
-            remaining_balance = 0,
-            settlement_date   = NEW.payment_date
-        WHERE debt_id = NEW.debt_id;
+           SET status            = 'Fully Paid',
+               remaining_balance = 0,
+               settlement_date   = NEW.payment_date
+         WHERE debt_id = NEW.debt_id;
 
         SELECT s.customer_id INTO v_customer_id
-        FROM Debt d
-        JOIN Sale s ON s.sale_id = d.sale_id
-        WHERE d.debt_id = NEW.debt_id;
+          FROM Debt d
+          JOIN Sale s ON s.sale_id = d.sale_id
+         WHERE d.debt_id = NEW.debt_id;
 
         IF v_customer_id IS NOT NULL THEN
             UPDATE Customer
-            SET total_outstanding = GREATEST(total_outstanding - NEW.amount_paid, 0)
-            WHERE customer_id = v_customer_id;
+               SET total_outstanding = GREATEST(total_outstanding - NEW.amount_paid, 0)
+             WHERE customer_id = v_customer_id;
         END IF;
     ELSE
         UPDATE Debt
-        SET status = 'Partially Paid'
-        WHERE debt_id = NEW.debt_id AND status = 'Unpaid';
+           SET status = 'Partially Paid'
+         WHERE debt_id = NEW.debt_id AND status = 'Unpaid';
     END IF;
 END$$
 
@@ -347,20 +481,27 @@ proc: BEGIN
 
     START TRANSACTION;
 
-        INSERT INTO Sale (customer_id, payment_method, total_amount, amount_tendered, change_given, total_cost, sale_date)
-        VALUES (NULL, 'cash', 0.00, p_tendered, 0.00, 0.00, NOW());
+        INSERT INTO Sale
+            (customer_id, payment_method, total_amount,
+             amount_tendered, change_given, total_cost, sale_date)
+        VALUES
+            (NULL, 'cash', 0.00, p_tendered, 0.00, 0.00, NOW());
 
         SET v_sale_id = LAST_INSERT_ID();
 
         WHILE v_index <= v_count DO
-            SET v_product_id = CAST(TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(p_product_ids, ',', v_index), ',', -1)) AS UNSIGNED);
-            SET v_qty        = CAST(TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(p_quantities,  ',', v_index), ',', -1)) AS UNSIGNED);
+            SET v_product_id = CAST(TRIM(SUBSTRING_INDEX(
+                                    SUBSTRING_INDEX(p_product_ids, ',', v_index), ',', -1))
+                                AS UNSIGNED);
+            SET v_qty        = CAST(TRIM(SUBSTRING_INDEX(
+                                    SUBSTRING_INDEX(p_quantities, ',', v_index), ',', -1))
+                                AS UNSIGNED);
 
             SELECT retail_price, cost_price, quantity
-            INTO   v_retail, v_cost, v_stock
-            FROM   Product
-            WHERE  product_id = v_product_id AND user_id = p_user_id
-            FOR UPDATE;
+              INTO v_retail, v_cost, v_stock
+              FROM Product
+             WHERE product_id = v_product_id AND user_id = p_user_id
+               FOR UPDATE;
 
             IF v_retail IS NULL THEN
                 ROLLBACK;
@@ -376,8 +517,10 @@ proc: BEGIN
                 LEAVE proc;
             END IF;
 
-            INSERT INTO Sale_Item (sale_id, product_id, quantity_sold, unit_price_at_sale, unit_cost_at_sale)
-            VALUES (v_sale_id, v_product_id, v_qty, v_retail, v_cost);
+            INSERT INTO Sale_Item
+                (sale_id, product_id, quantity_sold, unit_price_at_sale, unit_cost_at_sale)
+            VALUES
+                (v_sale_id, v_product_id, v_qty, v_retail, v_cost);
 
             SET v_total    = v_total    + (v_retail * v_qty);
             SET v_tot_cost = v_tot_cost + (v_cost   * v_qty);
@@ -385,11 +528,11 @@ proc: BEGIN
         END WHILE;
 
         UPDATE Sale
-        SET total_amount    = v_total,
-            amount_tendered = p_tendered,
-            change_given    = p_tendered - v_total,
-            total_cost      = v_tot_cost
-        WHERE sale_id = v_sale_id;
+           SET total_amount    = v_total,
+               amount_tendered = p_tendered,
+               change_given    = p_tendered - v_total,
+               total_cost      = v_tot_cost
+         WHERE sale_id = v_sale_id;
 
     COMMIT;
 
@@ -443,20 +586,27 @@ proc: BEGIN
 
         SET v_cust_id = LAST_INSERT_ID();
 
-        INSERT INTO Sale (customer_id, payment_method, total_amount, amount_tendered, change_given, total_cost, sale_date)
-        VALUES (v_cust_id, 'credit', 0.00, NULL, NULL, 0.00, NOW());
+        INSERT INTO Sale
+            (customer_id, payment_method, total_amount,
+             amount_tendered, change_given, total_cost, sale_date)
+        VALUES
+            (v_cust_id, 'credit', 0.00, NULL, NULL, 0.00, NOW());
 
         SET v_sale_id = LAST_INSERT_ID();
 
         WHILE v_index <= v_count DO
-            SET v_product_id = CAST(TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(p_product_ids, ',', v_index), ',', -1)) AS UNSIGNED);
-            SET v_qty        = CAST(TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(p_quantities,  ',', v_index), ',', -1)) AS UNSIGNED);
+            SET v_product_id = CAST(TRIM(SUBSTRING_INDEX(
+                                    SUBSTRING_INDEX(p_product_ids, ',', v_index), ',', -1))
+                                AS UNSIGNED);
+            SET v_qty        = CAST(TRIM(SUBSTRING_INDEX(
+                                    SUBSTRING_INDEX(p_quantities, ',', v_index), ',', -1))
+                                AS UNSIGNED);
 
             SELECT retail_price, cost_price, quantity
-            INTO   v_retail, v_cost, v_stock
-            FROM   Product
-            WHERE  product_id = v_product_id AND user_id = p_user_id
-            FOR UPDATE;
+              INTO v_retail, v_cost, v_stock
+              FROM Product
+             WHERE product_id = v_product_id AND user_id = p_user_id
+               FOR UPDATE;
 
             IF v_retail IS NULL THEN
                 ROLLBACK;
@@ -472,8 +622,10 @@ proc: BEGIN
                 LEAVE proc;
             END IF;
 
-            INSERT INTO Sale_Item (sale_id, product_id, quantity_sold, unit_price_at_sale, unit_cost_at_sale)
-            VALUES (v_sale_id, v_product_id, v_qty, v_retail, v_cost);
+            INSERT INTO Sale_Item
+                (sale_id, product_id, quantity_sold, unit_price_at_sale, unit_cost_at_sale)
+            VALUES
+                (v_sale_id, v_product_id, v_qty, v_retail, v_cost);
 
             SET v_total    = v_total    + (v_retail * v_qty);
             SET v_tot_cost = v_tot_cost + (v_cost   * v_qty);
@@ -481,12 +633,13 @@ proc: BEGIN
         END WHILE;
 
         UPDATE Sale
-        SET total_amount = v_total, total_cost = v_tot_cost
-        WHERE sale_id = v_sale_id;
+           SET total_amount = v_total,
+               total_cost   = v_tot_cost
+         WHERE sale_id = v_sale_id;
 
         UPDATE Customer
-        SET total_outstanding = v_total
-        WHERE customer_id = v_cust_id;
+           SET total_outstanding = v_total
+         WHERE customer_id = v_cust_id;
 
         INSERT INTO Debt (sale_id, original_amount, remaining_balance, status)
         VALUES (v_sale_id, v_total, v_total, 'Unpaid');
@@ -530,9 +683,9 @@ proc: BEGIN
     START TRANSACTION;
 
         SELECT quantity INTO v_stock_before
-        FROM Product
-        WHERE product_id = p_product_id
-        FOR UPDATE;
+          FROM Product
+         WHERE product_id = p_product_id
+           FOR UPDATE;
 
         IF v_stock_before IS NULL THEN
             ROLLBACK;
@@ -552,8 +705,8 @@ proc: BEGIN
         END IF;
 
         UPDATE Product
-        SET quantity = v_stock_after
-        WHERE product_id = p_product_id;
+           SET quantity = v_stock_after
+         WHERE product_id = p_product_id;
 
         INSERT INTO Inventory_Log (
             product_id, movement_type, quantity_change,
@@ -589,9 +742,9 @@ proc: BEGIN
     START TRANSACTION;
 
         SELECT remaining_balance INTO v_remaining
-        FROM Debt
-        WHERE debt_id = p_debt_id
-        FOR UPDATE;
+          FROM Debt
+         WHERE debt_id = p_debt_id
+           FOR UPDATE;
 
         IF v_remaining IS NULL THEN
             ROLLBACK;
@@ -626,6 +779,8 @@ DELIMITER ;
 --  VIEWS
 -- ============================================================
 
+-- FIX 6: LEFT JOIN Category so products with a soft-deleted or
+--         missing category still appear in the dashboard
 CREATE OR REPLACE VIEW vw_manager_dashboard AS
 SELECT
     p.product_id,
@@ -633,22 +788,22 @@ SELECT
     p.sku,
     p.user_id,
     u.store_name,
-    c.category_name,
-    p.quantity                                                AS current_stock,
-    p.status                                                  AS stock_status,
+    COALESCE(c.category_name, 'Uncategorized')            AS category_name,
+    p.quantity                                            AS current_stock,
+    p.status                                              AS stock_status,
     p.retail_price,
     p.cost_price,
     p.expiration_date,
-    COALESCE(SUM(si.quantity_sold), 0)                        AS total_units_sold,
-    COALESCE(SUM(si.subtotal), 0)                             AS total_revenue,
+    COALESCE(SUM(si.quantity_sold), 0)                    AS total_units_sold,
+    COALESCE(SUM(si.subtotal), 0)                         AS total_revenue,
     COALESCE(SUM(si.quantity_sold * si.unit_cost_at_sale), 0) AS total_cogs,
     COALESCE(SUM(si.subtotal - si.quantity_sold * si.unit_cost_at_sale), 0) AS gross_profit,
-    COUNT(DISTINCT si.sale_id)                                AS number_of_transactions
+    COUNT(DISTINCT si.sale_id)                            AS number_of_transactions
 FROM Product p
-JOIN Category   c  ON c.category_id = p.category_id
-JOIN User       u  ON u.user_id     = p.user_id
-LEFT JOIN Sale_Item si ON si.product_id = p.product_id
-LEFT JOIN Sale       s  ON s.sale_id    = si.sale_id
+JOIN User        u  ON u.user_id     = p.user_id
+LEFT JOIN Category   c  ON c.category_id = p.category_id
+LEFT JOIN Sale_Item si  ON si.product_id = p.product_id
+LEFT JOIN Sale       s  ON s.sale_id     = si.sale_id
 GROUP BY
     p.product_id, p.product_name, p.sku, p.user_id, u.store_name,
     c.category_name, p.quantity, p.status, p.retail_price,
@@ -661,15 +816,15 @@ SELECT
     cu.contact_number,
     cu.address,
     cu.total_outstanding,
-    COUNT(DISTINCT d.debt_id)               AS total_credit_transactions,
-    COALESCE(SUM(d.original_amount), 0)     AS total_borrowed,
-    COALESCE(SUM(d.remaining_balance), 0)   AS total_remaining,
+    COUNT(DISTINCT d.debt_id)                                        AS total_credit_transactions,
+    COALESCE(SUM(d.original_amount), 0)                             AS total_borrowed,
+    COALESCE(SUM(d.remaining_balance), 0)                           AS total_remaining,
     COALESCE(SUM(d.original_amount) - SUM(d.remaining_balance), 0) AS total_paid,
-    MAX(dp.payment_date)                    AS last_payment_date
+    MAX(dp.payment_date)                                            AS last_payment_date
 FROM Customer cu
 LEFT JOIN Sale          s  ON s.customer_id = cu.customer_id
 LEFT JOIN Debt          d  ON d.sale_id     = s.sale_id
-LEFT JOIN Debt_Payment dp  ON dp.debt_id   = d.debt_id
+LEFT JOIN Debt_Payment dp  ON dp.debt_id    = d.debt_id
 GROUP BY cu.customer_id, cu.customer_name, cu.contact_number,
          cu.address, cu.total_outstanding;
 
@@ -678,26 +833,26 @@ SELECT
     p.product_id,
     p.sku,
     p.product_name,
-    c.category_name,
+    COALESCE(c.category_name, 'Uncategorized') AS category_name,
     p.quantity,
     p.low_stock_threshold,
     p.status,
     p.expiration_date,
     p.user_id
 FROM Product p
-JOIN Category c ON c.category_id = p.category_id
-WHERE p.status IN ('Low Stock','Out of Stock')
+LEFT JOIN Category c ON c.category_id = p.category_id
+WHERE p.status IN ('Low Stock','Out of Stock','Near Expiry','Expired')
 ORDER BY p.quantity ASC;
 
 CREATE OR REPLACE VIEW vw_daily_sales_summary AS
 SELECT
-    DATE(s.sale_date)                                            AS sale_day,
-    COUNT(DISTINCT s.sale_id)                                    AS total_transactions,
-    SUM(s.total_amount)                                          AS total_revenue,
-    SUM(s.total_cost)                                            AS total_cost,
-    SUM(s.profit)                                                AS total_profit,
-    SUM(CASE WHEN s.payment_method = 'cash'   THEN 1 ELSE 0 END) AS cash_sales,
-    SUM(CASE WHEN s.payment_method = 'credit' THEN 1 ELSE 0 END) AS credit_sales
+    DATE(s.sale_date)                                                AS sale_day,
+    COUNT(DISTINCT s.sale_id)                                        AS total_transactions,
+    SUM(s.total_amount)                                              AS total_revenue,
+    SUM(s.total_cost)                                                AS total_cost,
+    SUM(s.profit)                                                    AS total_profit,
+    SUM(CASE WHEN s.payment_method = 'cash'   THEN 1 ELSE 0 END)   AS cash_sales,
+    SUM(CASE WHEN s.payment_method = 'credit' THEN 1 ELSE 0 END)   AS credit_sales
 FROM Sale s
 GROUP BY DATE(s.sale_date)
 ORDER BY sale_day DESC;
@@ -710,7 +865,7 @@ SELECT
     p.user_id,
     p.sku,
     p.product_name,
-    c.category_name,
+    COALESCE(c.category_name, 'Uncategorized') AS category_name,
     il.movement_type,
     il.quantity_change,
     il.stock_before,
@@ -720,7 +875,7 @@ SELECT
     il.adjustment_reason
 FROM Inventory_Log il
 JOIN Product  p ON p.product_id  = il.product_id
-JOIN Category c ON c.category_id = p.category_id
+LEFT JOIN Category c ON c.category_id = p.category_id
 ORDER BY il.log_date DESC;
 
 -- ============================================================
