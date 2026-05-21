@@ -133,22 +133,22 @@ $activePage = 'manage-products';
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto:wght@400;500;600&display=swap" rel="stylesheet"/>
 
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
 
   <!--
     Load order (DO NOT reorder):
-      1. global_sidebar.css       — body reset + sidebar CSS variables
-      2. global_manage-product.css — page-specific CSS variables
-      3. sidebar.css              — sidebar component styles
-      4. manage-product.css       — page layout + component styles
+      1. global_sidebar.css           — body reset + sidebar CSS variables
+      2. global_manage-products.css   — page-specific CSS variables
+      3. sidebar.css                  — sidebar component styles
+      4. manage-products.css          — page layout + component styles
   -->
   <link rel="stylesheet" href="global_sidebar.css"/>
-  <link rel="stylesheet" href="global_manage-product.css"/>
+  <link rel="stylesheet" href="global_manage-products.css"/>
   <link rel="stylesheet" href="sidebar.css"/>
-  <link rel="stylesheet" href="manage-product.css"/>
+  <link rel="stylesheet" href="manage-products.css"/>
 </head>
 <body>
 
@@ -156,6 +156,9 @@ $activePage = 'manage-products';
 
   <!-- ============================================================
        SIDEBAR
+       sidebar.php reads $activePage to highlight "Manage Products".
+       Make sure sidebar.php, sidebar.css, and global_sidebar.css
+       are in the same directory as this file.
        ============================================================ -->
   <?php $activePage = 'manage-products'; include 'sidebar.php'; ?>
 
@@ -179,12 +182,12 @@ $activePage = 'manage-products';
 
         <!-- Out of Stocks -->
         <div class="stat-card card-red">
-          <div class="stat-icon">
+          <div class="stat-icon icon-red">
             <!--
-              NOTE: Replace with your icon image:
-              <img src="./pics_icons/out-of-stock-icon.svg" width="60" height="60" alt=""/>
+              NOTE: Replace the <i> below with your icon image, e.g.:
+              <img src="./pics_icons/out-of-stock-icon.png" width="33" height="33" alt="Out of Stock"/>
             -->
-            <i class="bi bi-box-seam"></i>
+            <i class="bi bi-box-seam" style="font-size:28px;"></i>
           </div>
           <div class="stat-text">
             <span class="stat-label">Out of Stocks</span>
@@ -194,12 +197,12 @@ $activePage = 'manage-products';
 
         <!-- Expired Products -->
         <div class="stat-card card-orange">
-          <div class="stat-icon">
+          <div class="stat-icon icon-orange">
             <!--
-              NOTE: Replace with your icon image:
-              <img src="./pics_icons/expired-icon.svg" width="60" height="60" alt=""/>
+              NOTE: Replace the <i> below with your icon image, e.g.:
+              <img src="./pics_icons/expired-icon.png" width="33" height="33" alt="Expired"/>
             -->
-            <i class="bi bi-x-circle"></i>
+            <i class="bi bi-x-circle" style="font-size:28px;"></i>
           </div>
           <div class="stat-text">
             <span class="stat-label">Expired Products</span>
@@ -209,12 +212,12 @@ $activePage = 'manage-products';
 
         <!-- Low on Stock -->
         <div class="stat-card card-yellow">
-          <div class="stat-icon">
+          <div class="stat-icon icon-gray">
             <!--
-              NOTE: Replace with your icon image:
-              <img src="./pics_icons/low-stock-icon.svg" width="60" height="60" alt=""/>
+              NOTE: Replace the <i> below with your icon image, e.g.:
+              <img src="./pics_icons/low-stock-icon.png" width="33" height="33" alt="Low Stock"/>
             -->
-            <i class="bi bi-arrow-down-circle"></i>
+            <i class="bi bi-arrow-down-circle" style="font-size:28px;"></i>
           </div>
           <div class="stat-text">
             <span class="stat-label">Low on Stock</span>
@@ -224,12 +227,12 @@ $activePage = 'manage-products';
 
         <!-- Near Expiry -->
         <div class="stat-card card-blue">
-          <div class="stat-icon">
+          <div class="stat-icon icon-blue">
             <!--
-              NOTE: Replace with your icon image:
-              <img src="./pics_icons/near-expiry-icon.svg" width="60" height="60" alt=""/>
+              NOTE: Replace the <i> below with your icon image, e.g.:
+              <img src="./pics_icons/near-expiry-icon.png" width="33" height="33" alt="Near Expiry"/>
             -->
-            <i class="bi bi-exclamation-circle"></i>
+            <i class="bi bi-exclamation-circle" style="font-size:28px;"></i>
           </div>
           <div class="stat-text">
             <span class="stat-label">Near Expiry</span>
@@ -246,22 +249,23 @@ $activePage = 'manage-products';
       <!-- Action bar -->
       <div class="table-actions">
 
-        <!-- Top row: Search + Add / Bulk Restock -->
+        <!-- Top row: Search + Add Product + Bulk Restock -->
         <div class="top-row">
-          <form method="get" style="flex:1;max-width:480px;display:flex;align-items:center;gap:10px;">
+
+          <form method="get" style="flex:1;max-width:260px;display:flex;align-items:center;gap:10px;">
             <?php if (!empty($category_filter)): ?>
               <input type="hidden" name="category_filter" value="<?= htmlspecialchars($category_filter) ?>"/>
             <?php endif; ?>
             <div class="searchbar">
               <!--
-                NOTE: Replace with <img> for custom search icon:
-                <img class="searchbar-icon" src="./pics_icons/magnifying-glass-1.svg" alt="Search"/>
+                NOTE: Replace with your search icon image, e.g.:
+                <img class="searchbar-icon" src="./pics_icons/magnifying-glass-1.svg" width="20" height="20" alt="Search"/>
               -->
               <i class="bi bi-search searchbar-icon"></i>
               <input
                 type="text"
                 name="search"
-                placeholder="Search for product name / sku"
+                placeholder="Search product name"
                 value="<?= htmlspecialchars($search) ?>"
                 autocomplete="off"
               />
@@ -269,17 +273,13 @@ $activePage = 'manage-products';
           </form>
 
           <div class="action-btns">
+
             <!--
               Add Product button — opens add_prod.php as a popup window.
-              Popup dimensions: 800×600, centred on screen.
             -->
-            <button
-              class="btn-add-product"
-              type="button"
-              onclick="openAddProductPopup()"
-            >
+            <button class="btn-add-product" type="button" onclick="openAddProductPopup()">
               <!--
-                NOTE: Replace with <img>:
+                NOTE: Replace with your icon image, e.g.:
                 <img src="./pics_icons/gg-add.svg" class="btn-icon" alt=""/>
               -->
               <i class="bi bi-plus-circle btn-icon"></i>
@@ -289,16 +289,27 @@ $activePage = 'manage-products';
             <!-- Bulk Restock — navigates to restock.php -->
             <a href="restock.php" class="btn-outline">
               <!--
-                NOTE: Replace with <img>:
+                NOTE: Replace with your icon image, e.g.:
                 <img src="./pics_icons/basil-box-outline.svg" class="btn-icon" alt=""/>
               -->
               <i class="bi bi-box btn-icon"></i>
               <span>Bulk Restock</span>
             </a>
-          </div>
-        </div>
 
-        <!-- Bottom row: Count + Category filter + Import/Export -->
+            <!-- Export Inventory -->
+            <button class="btn-outline" type="button" onclick="exportInventory()">
+              <!--
+                NOTE: Replace with your icon image, e.g.:
+                <img src="./pics_icons/material-symbols-file-export-outline-rounded.svg" class="btn-icon" alt=""/>
+              -->
+              <i class="bi bi-download btn-icon"></i>
+              <span>Export Inventory</span>
+            </button>
+
+          </div>
+        </div><!-- /top-row -->
+
+        <!-- Filter row: Count + Category -->
         <div class="filter-row">
           <div class="filter-left">
 
@@ -308,7 +319,7 @@ $activePage = 'manage-products';
               <span class="count-val"><?= $total_products ?></span>
             </div>
 
-            <!-- Category filter -->
+            <!-- Category dropdown filter -->
             <form method="get" style="display:flex;">
               <?php if (!empty($search)): ?>
                 <input type="hidden" name="search" value="<?= htmlspecialchars($search) ?>"/>
@@ -326,39 +337,16 @@ $activePage = 'manage-products';
                   <?php endforeach; ?>
                 </select>
                 <!--
-                  NOTE: Replace arrow icon with <img>:
+                  NOTE: Replace with your dropdown arrow icon image, e.g.:
                   <img src="./pics_icons/ri-arrow-drop-down-line.svg" width="24" height="24" alt=""/>
                 -->
                 <i class="bi bi-chevron-down" style="font-size:14px;color:var(--1-brown);pointer-events:none;"></i>
               </div>
             </form>
-          </div>
 
-          <div class="filter-right">
-            <!-- Import CSV -->
-            <button class="btn-outline" type="button"
-              onclick="document.getElementById('csv-import-input').click()">
-              <!--
-                NOTE: Replace with <img>:
-                <img src="./pics_icons/uil-import.svg" class="btn-icon" alt=""/>
-              -->
-              <i class="bi bi-upload btn-icon"></i>
-              <span>Import CSV</span>
-            </button>
-            <input type="file" id="csv-import-input" accept=".csv" style="display:none;"
-              onchange="handleCSVImport(this)"/>
+          </div><!-- /filter-left -->
+        </div><!-- /filter-row -->
 
-            <!-- Export Inventory -->
-            <button class="btn-outline" type="button" onclick="exportInventory()">
-              <!--
-                NOTE: Replace with <img>:
-                <img src="./pics_icons/material-symbols-file-export-outline-rounded.svg" class="btn-icon" alt=""/>
-              -->
-              <i class="bi bi-download btn-icon"></i>
-              <span>Export Inventory</span>
-            </button>
-          </div>
-        </div>
       </div><!-- /table-actions -->
 
       <!-- Table -->
@@ -366,7 +354,7 @@ $activePage = 'manage-products';
         <div class="table-inner">
           <div class="table2">
 
-            <!-- THEAD -->
+            <!-- THEAD (always visible, not scrolled) -->
             <div class="thead">
               <div class="thead-row">
                 <b class="col-name">Product Name</b>
@@ -381,69 +369,73 @@ $activePage = 'manage-products';
               <div class="thead-divider"></div>
             </div>
 
-            <!-- TBODY -->
-            <div class="tbody" id="inv-tbody">
-              <?php if (empty($products)): ?>
-                <p class="no-products-msg">No products found. Add a product to get started.</p>
-              <?php else: ?>
-                <?php foreach ($products as $p):
-                  $badgeClass  = statusBadgeClass($p['status'] ?? '');
-                  $statusLabel = htmlspecialchars($p['status'] ?? 'In Stock');
-                  $expiryFmt   = $p['expiration_date']
-                    ? date('m/d/y', strtotime($p['expiration_date']))
-                    : '—';
-                ?>
-                <div class="tbody-row" data-hidden="">
-                  <div class="tbody-row-content">
-                    <span class="col-name col-name-val"><?= htmlspecialchars($p['product_name']) ?></span>
-                    <span class="col-sku  col-sku-val"><?= htmlspecialchars($p['sku'] ?? '—') ?></span>
-                    <span class="col-category col-category-val"><?= htmlspecialchars($p['category_name']) ?></span>
-                    <span class="col-stock col-stock-val"><?= (int)$p['quantity'] ?></span>
-                    <span class="col-expiry col-expiry-val"><?= $expiryFmt ?></span>
-                    <span class="col-price col-price-val">₱ <?= number_format((float)$p['retail_price'], 0) ?></span>
-                    <div class="col-status col-status-val">
-                      <span class="status-badge <?= $badgeClass ?>"><?= $statusLabel ?></span>
-                    </div>
-                    <div class="col-actions col-actions-val">
+            <!-- TBODY (scrollable — scrollbar appears only when list is long) -->
+            <div class="tbody-scroll">
+              <div class="tbody" id="inv-tbody">
+                <?php if (empty($products)): ?>
+                  <p class="no-products-msg">No products found. Add a product to get started.</p>
+                <?php else: ?>
+                  <?php foreach ($products as $p):
+                    $badgeClass  = statusBadgeClass($p['status'] ?? '');
+                    $statusLabel = htmlspecialchars($p['status'] ?? 'In Stock');
+                    $expiryFmt   = $p['expiration_date']
+                      ? date('m/d/y', strtotime($p['expiration_date']))
+                      : '—';
+                  ?>
+                  <div class="tbody-row" data-hidden="">
+                    <div class="tbody-row-content">
+                      <span class="col-name col-name-val"><?= htmlspecialchars($p['product_name']) ?></span>
+                      <span class="col-sku  col-sku-val"><?= htmlspecialchars($p['sku'] ?? '—') ?></span>
+                      <span class="col-category col-category-val"><?= htmlspecialchars($p['category_name']) ?></span>
+                      <span class="col-stock col-stock-val"><?= (int)$p['quantity'] ?></span>
+                      <span class="col-expiry col-expiry-val"><?= $expiryFmt ?></span>
+                      <span class="col-price col-price-val">₱ <?= number_format((float)$p['retail_price'], 0) ?></span>
+                      <div class="col-status col-status-val">
+                        <span class="status-badge <?= $badgeClass ?>"><?= $statusLabel ?></span>
+                      </div>
+                      <div class="col-actions col-actions-val">
 
-                      <!-- Eye / Edit button — opens update_prod.php as popup -->
-                      <button
-                        class="action-btn"
-                        type="button"
-                        title="View / Edit"
-                        onclick="openEditPopup(<?= (int)$p['product_id'] ?>)"
-                      >
-                        <!--
-                          NOTE: Replace with <img>:
-                          <img src="./pics_icons/Vector.svg" width="18" height="18" alt="View"/>
-                        -->
-                        <i class="bi bi-eye"></i>
-                      </button>
-
-                      <!-- Delete button -->
-                      <form class="delete-form" method="post"
-                            onsubmit="return confirm('Delete this product?')">
-                        <input type="hidden" name="action" value="delete"/>
-                        <input type="hidden" name="product_id" value="<?= (int)$p['product_id'] ?>"/>
-                        <button class="action-btn delete-btn" type="submit" title="Delete">
+                        <!-- Eye / Edit button — opens update_prod.php as a popup window -->
+                        <button
+                          class="action-btn"
+                          type="button"
+                          title="View / Edit"
+                          onclick="openEditPopup(<?= (int)$p['product_id'] ?>)"
+                        >
                           <!--
-                            NOTE: Replace with <img>:
-                            <img src="./pics_icons/iconamoon-trash.svg" width="17" height="19" alt="Delete"/>
+                            NOTE: Replace with your view icon image, e.g.:
+                            <img src="./pics_icons/view.svg" width="18" height="21" alt="View"/>
                           -->
-                          <i class="bi bi-trash3"></i>
+                          <i class="bi bi-eye"></i>
                         </button>
-                      </form>
 
+                        <!-- Delete button -->
+                        <form class="delete-form" method="post"
+                              onsubmit="return confirm('Delete this product?')">
+                          <input type="hidden" name="action" value="delete"/>
+                          <input type="hidden" name="product_id" value="<?= (int)$p['product_id'] ?>"/>
+                          <button class="action-btn delete-btn" type="submit" title="Delete">
+                            <!--
+                              NOTE: Replace with your trash icon image, e.g.:
+                              <img src="./pics_icons/trash.svg" width="22" height="20" alt="Delete"/>
+                            -->
+                            <i class="bi bi-trash3"></i>
+                          </button>
+                        </form>
+
+                      </div>
                     </div>
+                    <div class="row-divider"></div>
                   </div>
-                  <div class="row-divider"></div>
-                </div>
-                <?php endforeach; ?>
-              <?php endif; ?>
-            </div><!-- /tbody -->
+                  <?php endforeach; ?>
+                <?php endif; ?>
+              </div><!-- /tbody -->
+            </div><!-- /tbody-scroll -->
 
           </div><!-- /table2 -->
         </div><!-- /table-inner -->
+
+        <!-- Right edge scrollbar indicator strip -->
         <div class="table-scroll-indicator"></div>
       </div><!-- /table-wrap -->
 
@@ -451,7 +443,7 @@ $activePage = 'manage-products';
       <div class="pagination">
         <button class="btn-page" id="btn-prev" type="button">
           <!--
-            NOTE: Replace with <img>:
+            NOTE: Replace with your arrow icon image, e.g.:
             <img src="./pics_icons/tabler-arrow-left.svg" width="18" height="18" alt="Prev"/>
           -->
           <i class="bi bi-arrow-left"></i>
@@ -460,7 +452,7 @@ $activePage = 'manage-products';
         <button class="btn-page" id="btn-next" type="button">
           <span>Next</span>
           <!--
-            NOTE: Replace with <img>:
+            NOTE: Replace with your arrow icon image, e.g.:
             <img src="./pics_icons/mingcute-arrow-right-line.svg" width="18" height="18" alt="Next"/>
           -->
           <i class="bi bi-arrow-right"></i>
@@ -481,12 +473,11 @@ $activePage = 'manage-products';
 
 /**
  * Open add_prod.php as a centred popup window.
- * When the popup closes (or navigates back), this page reloads
- * so the new product appears in the table.
+ * When the popup closes, this page reloads so the new product appears.
  */
 function openAddProductPopup() {
-  var w = 820;
-  var h = 700;
+  var w    = 820;
+  var h    = 700;
   var left = Math.round((screen.width  - w) / 2);
   var top  = Math.round((screen.height - h) / 2);
   var popup = window.open(
@@ -495,7 +486,6 @@ function openAddProductPopup() {
     'width=' + w + ',height=' + h + ',left=' + left + ',top=' + top +
     ',resizable=yes,scrollbars=yes'
   );
-  /* Poll for popup close so we can refresh the product table */
   var timer = setInterval(function () {
     if (popup && popup.closed) {
       clearInterval(timer);
@@ -506,10 +496,11 @@ function openAddProductPopup() {
 
 /**
  * Open update_prod.php?product_id=X as a centred popup window.
+ * When the popup closes, this page reloads to reflect any changes.
  */
 function openEditPopup(productId) {
-  var w = 820;
-  var h = 700;
+  var w    = 820;
+  var h    = 700;
   var left = Math.round((screen.width  - w) / 2);
   var top  = Math.round((screen.height - h) / 2);
   var popup = window.open(
@@ -518,7 +509,6 @@ function openEditPopup(productId) {
     'width=' + w + ',height=' + h + ',left=' + left + ',top=' + top +
     ',resizable=yes,scrollbars=yes'
   );
-  /* Refresh table when popup closes */
   var timer = setInterval(function () {
     if (popup && popup.closed) {
       clearInterval(timer);
@@ -529,6 +519,8 @@ function openEditPopup(productId) {
 
 /* ─────────────────────────────────────────────────────────────
    Client-side search filter
+   Filters visible rows in real-time without a page reload.
+   Works in tandem with server-side ?search= for initial load.
 ───────────────────────────────────────────────────────────── */
 var searchInput = document.querySelector('.searchbar input');
 if (searchInput) {
@@ -547,6 +539,8 @@ if (searchInput) {
 
 /* ─────────────────────────────────────────────────────────────
    Pagination
+   Shows ROWS_PER_PAGE rows at a time; scrollbar appears inside
+   the tbody-scroll div when the full list is displayed.
 ───────────────────────────────────────────────────────────── */
 var currentPage   = 1;
 var ROWS_PER_PAGE = 10;
@@ -564,32 +558,26 @@ function renderPage() {
   allRows.forEach(function (r)    { r.style.display = 'none'; });
   visible.forEach(function (r, i) { r.style.display = (i >= start && i < end) ? '' : 'none'; });
 
-  document.getElementById('btn-prev').disabled = currentPage <= 1;
-  document.getElementById('btn-next').disabled = currentPage >= maxPage;
+  var btnPrev = document.getElementById('btn-prev');
+  var btnNext = document.getElementById('btn-next');
+  if (btnPrev) btnPrev.disabled = currentPage <= 1;
+  if (btnNext) btnNext.disabled = currentPage >= maxPage;
 }
 
-document.getElementById('btn-prev').addEventListener('click', function () {
-  if (currentPage > 1) { currentPage--; renderPage(); }
-});
-document.getElementById('btn-next').addEventListener('click', function () {
-  currentPage++; renderPage();
-});
+var btnPrev = document.getElementById('btn-prev');
+var btnNext = document.getElementById('btn-next');
 
-/* ─────────────────────────────────────────────────────────────
-   CSV Import
-───────────────────────────────────────────────────────────── */
-function handleCSVImport(input) {
-  if (!input.files || !input.files[0]) return;
-  /*
-    TODO: POST the CSV file to your import endpoint, e.g.:
-    var formData = new FormData();
-    formData.append('csv_file', input.files[0]);
-    fetch('import_csv.php', { method: 'POST', body: formData })
-      .then(function (r) { return r.json(); })
-      .then(function (d) { if (d.success) location.reload(); else alert(d.message); });
-  */
-  alert('CSV import: "' + input.files[0].name + '" selected. Connect to your import endpoint.');
-  input.value = '';
+if (btnPrev) {
+  btnPrev.addEventListener('click', function () {
+    if (currentPage > 1) { currentPage--; renderPage(); }
+  });
+}
+
+if (btnNext) {
+  btnNext.addEventListener('click', function () {
+    currentPage++;
+    renderPage();
+  });
 }
 
 /* ─────────────────────────────────────────────────────────────

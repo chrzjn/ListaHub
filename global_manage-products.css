@@ -1,12 +1,4 @@
-/* global_manage-product.css */
-/*
-  Load order in manage-products.php:
-    1. global_sidebar.css       — body reset + sidebar CSS variables
-    2. global_manage-product.css — page-specific CSS variables
-    3. sidebar.css              — sidebar component styles
-    4. manage-product.css       — page layout + component styles
-*/
-
+/* global_manage-products.css */
 body {
   margin: 0;
   line-height: normal;
@@ -17,83 +9,101 @@ body {
   --Space-0:   0px;
   --Space-050: 2px;
 
-  /* ── Accent / Brand Colors ── */
-  --Accents-Orange: #ff8d28;
-  --blue:           #2583c2;
-  --green:          #159459;
-  --red:            #eb453a;
-  --yellow:         #ebd665;
-  --yellow-white:   #fdf3db;
-  --yellow-white-1: #fcf8ee;
+  /* ── Brand / Accent Colors ── */
+  --Accents-Orange:  #ff8d28;
+  --blue:            #2583c2;
+  --green:           #159459;
+  --red:             #eb453a;
+  --yellow:          #ebd665;
+  --yellow-white:    #fdf3db;
+  --yellow-white-1:  #fcf8ee;
 
   /* ── UI / Neutral Colors ── */
-  --1-brown:             #3e2c23;
-  --2-brown:             #3e2c23;
-  --color-black:         #000;
-  --color-cornsilk:      #fff5d9;
-  --color-darkkhaki:     rgba(209, 189, 77, 0.6);
-  --color-dimgray-100:   #705e57;
-  --color-dimgray-200:   rgba(112, 94, 87, 0.09);
-  --color-gainsboro:     rgba(207, 204, 201, 0.5);
-  --color-gray-100:      #3e2c23;
-  --color-gray-200:      rgba(62, 44, 35, 0.85);
-  --color-gray-300:      rgba(62, 44, 35, 0.8);
-  --color-gray-400:      rgba(0, 0, 0, 0.01);
-  --color-khaki-100:     rgba(235, 214, 101, 0.6);
-  --color-lavender:      #e3ebff;
-  --color-lightgray:     rgba(207, 204, 201, 0.5);
-  --color-linen:         #ffeee3;
-  --color-white:         #fff;
-  --light-red:           #ffe4e3;
-  --text-brown:          #3e2c23;
+  --1-brown:              #3e2c23;
+  --2-brown:              #3e2c23;
+  --color-black:          #000;
+  --color-cornsilk:       #fff5d9;
+  --color-darkkhaki:      rgba(209, 189, 77, 0.6);
+  --color-dimgray:        #535353;
+  --color-dimgray-100:    #705e57;
+  --color-dimgray-200:    rgba(112, 94, 87, 0.09);
+  --color-gainsboro:      #dfe5ee;
+  --color-gray-100:       #2b2b2b;
+  --color-gray-200:       rgba(62, 44, 35, 0.59);
+  --color-gray-300:       rgba(62, 44, 35, 0.85);
+  --color-gray-400:       rgba(62, 44, 35, 0.8);
+  --color-gray-500:       rgba(0, 0, 0, 0.01);
+  --color-khaki-100:      rgba(235, 214, 101, 0.6);
+  --color-lavender:       #e3ebff;
+  --color-lightgray:      rgba(207, 204, 201, 0.4);
+  --color-linen:          #ffeee3;
+  --color-steelblue:      rgba(37, 131, 194, 0.8);
+  --color-tomato:         rgba(235, 69, 58, 0.8);
+  --color-white:          #fff;
+  --color-whitesmoke:     #eee;
+  --green1:               rgba(216, 254, 213, 0.5);
+  --light-red:            #ffe4e3;
+  --text-brown:           #3e2c23;
+  --yellow-white-11:      #fcf8ee;
+  --yellow-white1:        #fcf8ee;
 
   /* ── Gap ── */
+  --gap-5:  5px;
   --gap-6:  6px;
+  --gap-7:  7px;
   --gap-10: 10px;
-  --gap-14: 14px;
   --gap-15: 15px;
   --gap-20: 20px;
+  --gap-22: 22px;
 
   /* ── Padding ── */
-  --padding-0:   0px;
-  --padding-3:   3px;
-  --padding-4:   4px;
-  --padding-4_5: 4.5px;
-  --padding-5:   5px;
-  --padding-6:   6px;
-  --padding-8:   8px;
-  --padding-9:   9px;
-  --padding-10:  10px;
-  --padding-13:  13px;
-  --padding-14:  14px;
-  --padding-15:  15px;
-  --padding-16:  16px;
-  --padding-18:  18px;
-  --padding-19:  19px;
-  --padding-20:  20px;
+  --padding-0:  0px;
+  --padding-01: 0;
+  --padding-4:  4px;
+  --padding-5:  5px;
+  --padding-6:  6px;
+  --padding-8:  8px;
+  --padding-10: 10px;
+  --padding-13: 13px;
+  --padding-14: 14px;
+  --padding-15: 15px;
+  --padding-16: 16px;
+  --padding-18: 18px;
+  --padding-19: 19px;
+  --padding-20: 20px;
+  --padding-22: 22px;
 
   /* ── Border Radius ── */
+  --br-3_3: 3.3px;
+  --br-5_5: 5.5px;
   --br-10:  10px;
   --br-15:  15px;
   --br-20:  20px;
-  --br-231: 231px;
 
-  /* ── Font ── */
-  --font-inter: Inter, sans-serif;
+  /* ── Fonts ── */
+  --font-inter:  Inter;
+  --font-roboto: Roboto;
 
   /* ── Font Sizes ── */
-  --fs-13: 13px;
-  --fs-14: 14px;
-  --fs-15: 15px;
-  --fs-16: 16px;
-  --fs-19: 19px;
-  --fs-24: 24px;
-  --fs-32: 32px;
+  --fs-11_4: 11.4px;
+  --fs-13:   13px;
+  --fs-14:   14px;
+  --fs-15:   15px;
+  --fs-16:   16px;
+  --fs-18:   18px;
+  --fs-19:   19px;
+  --fs-20:   20px;
+  --fs-24:   24px;
+  --fs-25:   25px;
+  --fs-26:   26px;
+  --fs-32:   32px;
 
   /* ── Borders ── */
-  --border-1: 1px solid #3e2c23;
-  --border-2: 1px solid #fff;
-  --border-3: 1px solid #159459;
+  --border-1: 1px solid var(--color-gray-500);
+  --border-2: 1px solid var(--1-brown);
+  --border-3: 1px solid var(--color-white);
+  --border-4: 1px dashed var(--color-gainsboro);
+  --border-green: 1px solid var(--green);
 
   /* ── Shadows ── */
   --shadow-drop:
@@ -102,7 +112,6 @@ body {
     5px  8px  6px rgba(62, 44, 35, 0.03),
     2px  4px  4px rgba(62, 44, 35, 0.04),
     1px  1px  2px rgba(62, 44, 35, 0.05);
-
   --shadow-inner:
     -15px -13px 6px rgba(44, 44, 44, 0) inset,
     -10px -8px  5px rgba(44, 44, 44, 0.01) inset,
@@ -110,34 +119,48 @@ body {
     -2px  -2px  3px rgba(44, 44, 44, 0.04) inset,
     -1px  -1px  2px rgba(44, 44, 44, 0.05) inset;
 
-  --shadow-inner-1:
-    -26px -17px 9px rgba(44, 44, 44, 0) inset,
-    -17px -11px 8px rgba(44, 44, 44, 0.01) inset,
-    -9px  -6px  7px rgba(44, 44, 44, 0.05) inset,
-    -4px  -3px  5px rgba(44, 44, 44, 0.09) inset,
-    -1px  -1px  3px rgba(44, 44, 44, 0.1) inset;
-
-  --text-shadow-1: 0px 4px 4px rgba(0, 0, 0, 0.25);
+  /* ── Gradients ── */
+  --gradient-1: linear-gradient(
+    146.01deg,
+    rgba(253, 253, 253, 0.6),
+    rgba(254, 246, 227, 0.6) 38.94%,
+    rgba(255, 244, 216, 0.6)
+  );
 
   /* ── Width / Heights ── */
   --height-1:    1px;
-  --height-16_5: 16.5px;
+  --height-6:    6px;
+  --height-13:   13px;
+  --height-16:   16px;
   --height-19:   19px;
-  --height-19_1: 19.1px;
   --height-20:   20px;
   --height-21:   21px;
   --height-24:   24px;
+  --height-30:   30px;
+  --height-31:   31px;
+  --height-36:   36px;
   --height-37:   37px;
+  --height-40:   40px;
+  --height-56:   56px;
+  --height-70:   70px;
+  --min-w-3:     3px;
   --min-w-80:    80px;
-  --width-17:    17px;
+  --min-w-160:   160px;
   --width-18:    18px;
   --width-22:    22px;
   --width-22_5:  22.5px;
   --width-24:    24px;
+  --width-38:    38px;
+  --width-40:    40px;
+  --width-42:    42px;
   --width-70:    70px;
   --width-85:    85px;
   --width-95:    95px;
   --width-120:   120px;
   --width-130:   130px;
+  --width-133:   133px;
   --width-200:   200px;
+
+  /* ── Letter Spacing ── */
+  --ls--0_04: -0.04em;
 }
