@@ -1,109 +1,103 @@
-/* global_manage-products.css */
+/* global_manage-products.css
+   Merged: original manage-products variables + add_prod variables
+   ---------------------------------------------------------------- */
+
 body {
   margin: 0;
   line-height: normal;
 }
 
 :root {
-  /* ── Spacing ── */
-  --Space-0:   0px;
-  --Space-050: 2px;
-
-  /* ── Brand / Accent Colors ── */
-  --Accents-Orange:  #ff8d28;
-  --blue:            #2583c2;
-  --green:           #159459;
-  --red:             #eb453a;
-  --yellow:          #ebd665;
-  --yellow-white:    #fdf3db;
-  --yellow-white-1:  #fcf8ee;
+  /* ── Accent / Brand Colors ── */
+  --Accents-Orange: #ff8d28;
+  --blue:           #2583c2;
+  --green:          #159459;
+  --red:            #eb453a;
+  --yellow:         #ebd665;
+  --yellow-white:   #fdf3db;
+  --yellow-white-1: #fcf8ee;
 
   /* ── UI / Neutral Colors ── */
-  --1-brown:              #3e2c23;
-  --2-brown:              #3e2c23;
-  --color-black:          #000;
-  --color-cornsilk:       #fff5d9;
-  --color-darkkhaki:      rgba(209, 189, 77, 0.6);
-  --color-dimgray:        #535353;
-  --color-dimgray-100:    #705e57;
-  --color-dimgray-200:    rgba(112, 94, 87, 0.09);
-  --color-gainsboro:      #dfe5ee;
-  --color-gray-100:       #2b2b2b;
-  --color-gray-200:       rgba(62, 44, 35, 0.59);
-  --color-gray-300:       rgba(62, 44, 35, 0.85);
-  --color-gray-400:       rgba(62, 44, 35, 0.8);
-  --color-gray-500:       rgba(0, 0, 0, 0.01);
-  --color-khaki-100:      rgba(235, 214, 101, 0.6);
-  --color-lavender:       #e3ebff;
-  --color-lightgray:      rgba(207, 204, 201, 0.4);
-  --color-linen:          #ffeee3;
-  --color-steelblue:      rgba(37, 131, 194, 0.8);
-  --color-tomato:         rgba(235, 69, 58, 0.8);
-  --color-white:          #fff;
-  --color-whitesmoke:     #eee;
-  --green1:               rgba(216, 254, 213, 0.5);
-  --light-red:            #ffe4e3;
-  --text-brown:           #3e2c23;
-  --yellow-white-11:      #fcf8ee;
-  --yellow-white1:        #fcf8ee;
+  --1-brown:               #3e2c23;
+  --2-brown:               #3e2c23;
+  --color-black:           #000;
+  --color-cornsilk-100:    #fff5d9;
+  --color-cornsilk-200:    rgba(253, 243, 219, 0.45);
+  --color-darkkhaki:       rgba(209, 189, 77, 0.6);
+  --color-dimgray-100:     #705e57;
+  --color-dimgray-200:     rgba(112, 94, 87, 0.09);
+  --color-floralwhite:     rgba(252, 248, 238, 0);
+  --color-gainsboro:       rgba(231, 230, 226, 0);
+  --color-gray-100:        #2b2b2b;
+  --color-gray-200:        #212934;
+  --color-gray-300:        rgba(62, 44, 35, 0.5);
+  --color-gray-400:        rgba(43, 43, 43, 0.4);
+  --color-gray-500:        rgba(0, 0, 0, 0.2);
+  --color-gray-600:        rgba(62, 44, 35, 0.85);
+  --color-gray-700:        rgba(62, 44, 35, 0.8);
+  --color-gray-800:        rgba(0, 0, 0, 0.01);
+  --color-khaki-100:       rgba(235, 214, 101, 0.66);
+  --color-khaki-200:       rgba(235, 214, 101, 0.6);
+  --color-lavender:        #e3ebff;
+  --color-lightgray:       rgba(207, 204, 201, 0);
+  --color-linen:           #ffeee3;
+  --color-white:           #fff;
+  --light-red:             #ffe4e3;
+  --text-brown:            #3e2c23;
+  --yellow-white-11:       #fcf8ee;
+  --yellow-white1:         #fcf8ee;
 
   /* ── Gap ── */
-  --gap-5:  5px;
+  --gap-4:  4px;
   --gap-6:  6px;
-  --gap-7:  7px;
   --gap-10: 10px;
+  --gap-14: 14px;
   --gap-15: 15px;
   --gap-20: 20px;
-  --gap-22: 22px;
 
   /* ── Padding ── */
-  --padding-0:  0px;
-  --padding-01: 0;
-  --padding-4:  4px;
-  --padding-5:  5px;
-  --padding-6:  6px;
-  --padding-8:  8px;
-  --padding-10: 10px;
-  --padding-13: 13px;
-  --padding-14: 14px;
-  --padding-15: 15px;
-  --padding-16: 16px;
-  --padding-18: 18px;
-  --padding-19: 19px;
-  --padding-20: 20px;
-  --padding-22: 22px;
+  --padding-0:   0px;
+  --padding-01:  0;
+  --padding-3:   3px;
+  --padding-4:   4px;
+  --padding-6:   6px;
+  --padding-8:   8px;
+  --padding-9:   9px;
+  --padding-10:  10px;
+  --padding-12:  12px;
+  --padding-13:  13px;
+  --padding-14:  14px;
+  --padding-15:  15px;
+  --padding-20:  20px;
+  --padding-4_5: 4.5px;
 
   /* ── Border Radius ── */
-  --br-3_3: 3.3px;
-  --br-5_5: 5.5px;
+  --br-2:   2px;
   --br-10:  10px;
   --br-15:  15px;
   --br-20:  20px;
+  --br-231: 231px;
 
-  /* ── Fonts ── */
-  --font-inter:  Inter;
-  --font-roboto: Roboto;
+  /* ── Font ── */
+  --font-inter: Inter, sans-serif;
 
   /* ── Font Sizes ── */
-  --fs-11_4: 11.4px;
-  --fs-13:   13px;
-  --fs-14:   14px;
-  --fs-15:   15px;
-  --fs-16:   16px;
-  --fs-18:   18px;
-  --fs-19:   19px;
-  --fs-20:   20px;
-  --fs-24:   24px;
-  --fs-25:   25px;
-  --fs-26:   26px;
-  --fs-32:   32px;
+  --fs-13: 13px;
+  --fs-14: 14px;
+  --fs-15: 15px;
+  --fs-16: 16px;
+  --fs-18: 18px;
+  --fs-19: 19px;
+  --fs-24: 24px;
+  --fs-26: 26px;
+  --fs-32: 32px;
 
   /* ── Borders ── */
-  --border-1: 1px solid var(--color-gray-500);
-  --border-2: 1px solid var(--1-brown);
-  --border-3: 1px solid var(--color-white);
-  --border-4: 1px dashed var(--color-gainsboro);
-  --border-green: 1px solid var(--green);
+  --border-1: 1px solid var(--1-brown);
+  --border-2: 1px solid var(--color-white);
+  --border-3: 1px solid var(--color-dimgray-100);
+  --border-4: 1px solid var(--green);
+  --border-5: 1px solid var(--color-gray-500);
 
   /* ── Shadows ── */
   --shadow-drop:
@@ -112,6 +106,7 @@ body {
     5px  8px  6px rgba(62, 44, 35, 0.03),
     2px  4px  4px rgba(62, 44, 35, 0.04),
     1px  1px  2px rgba(62, 44, 35, 0.05);
+
   --shadow-inner:
     -15px -13px 6px rgba(44, 44, 44, 0) inset,
     -10px -8px  5px rgba(44, 44, 44, 0.01) inset,
@@ -119,48 +114,43 @@ body {
     -2px  -2px  3px rgba(44, 44, 44, 0.04) inset,
     -1px  -1px  2px rgba(44, 44, 44, 0.05) inset;
 
-  /* ── Gradients ── */
-  --gradient-1: linear-gradient(
-    146.01deg,
-    rgba(253, 253, 253, 0.6),
-    rgba(254, 246, 227, 0.6) 38.94%,
-    rgba(255, 244, 216, 0.6)
-  );
+  --shadow-inner-1:
+    -26px -17px 9px rgba(44, 44, 44, 0) inset,
+    -17px -11px 8px rgba(44, 44, 44, 0.01) inset,
+    -9px  -6px  7px rgba(44, 44, 44, 0.05) inset,
+    -4px  -3px  5px rgba(44, 44, 44, 0.09) inset,
+    -1px  -1px  3px rgba(44, 44, 44, 0.1) inset;
+
+  /* ── Stat Card colors ── */
+  --card-red-bg:    rgba(255, 228, 227, 0.7);
+  --card-orange-bg: rgba(255, 237, 213, 0.7);
+  --card-yellow-bg: rgba(255, 250, 220, 0.7);
+  --card-blue-bg:   rgba(227, 235, 255, 0.7);
 
   /* ── Width / Heights ── */
   --height-1:    1px;
-  --height-6:    6px;
-  --height-13:   13px;
   --height-16:   16px;
   --height-19:   19px;
   --height-20:   20px;
   --height-21:   21px;
   --height-24:   24px;
-  --height-30:   30px;
-  --height-31:   31px;
-  --height-36:   36px;
-  --height-37:   37px;
-  --height-40:   40px;
-  --height-56:   56px;
-  --height-70:   70px;
-  --min-w-3:     3px;
-  --min-w-80:    80px;
-  --min-w-160:   160px;
+  --height-16_5: 16.5px;
+  --height-19_1: 19.1px;
+  --width-16:    16px;
+  --width-17:    17px;
   --width-18:    18px;
+  --width-20:    20px;
   --width-22:    22px;
-  --width-22_5:  22.5px;
   --width-24:    24px;
-  --width-38:    38px;
-  --width-40:    40px;
-  --width-42:    42px;
-  --width-70:    70px;
-  --width-85:    85px;
+  --width-60:    60px;
+  --width-65:    65px;
   --width-95:    95px;
+  --width-100:   100px;
   --width-120:   120px;
   --width-130:   130px;
-  --width-133:   133px;
   --width-200:   200px;
+  --width-22_5:  22.5px;
 
-  /* ── Letter Spacing ── */
-  --ls--0_04: -0.04em;
+  /* ── Letter Spacings ── */
+  --ls--0_04: -0.04;
 }
