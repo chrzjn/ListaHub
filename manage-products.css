@@ -13,10 +13,10 @@
 
 body {
   font-family: var(--font-inter);
-  /*
-    NOTE: Set your background image here:
+  
+  
     background-image: url('pics_icons/bg2_blank.png');
-  */
+  
   background-size: cover;
   background-repeat: no-repeat;
   background-position: top center;
