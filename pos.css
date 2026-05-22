@@ -911,7 +911,7 @@ body {
 .cust-amount-input {
   flex: 1;
   padding: 11px 16px 11px 6px;
-  -moz-appearance: textfield;
+
   cursor: default;
 }
 .cust-amount-input::-webkit-outer-spin-button,

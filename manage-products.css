@@ -257,7 +257,7 @@ body {
   border: var(--border-1);
   padding: 8px 16px;
   background: transparent;
-  cursor: pointer;
+  
   font-family: var(--font-inter);
   font-size: 16px;
   font-weight: 500;
@@ -286,7 +286,7 @@ body {
   font-weight: 500;
   color: var(--1-brown);
   cursor: pointer;
-  appearance: none;
+  appearance: auto;
   padding-right: 4px;
 }
 .category-pill i {
