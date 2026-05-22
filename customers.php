@@ -420,12 +420,7 @@ $activePage = 'customers';
                 Export list
               </a>
 
-              <!-- Add customer -->
-              <button class="add-customer-btn" onclick="openModal('addModal')">
-                <i class="bi bi-person-plus-fill"></i>
-                Add Customer
-              </button>
-            </div>
+              
 
           </div>
         </div><!-- /.table-actions-bar -->
@@ -591,10 +586,7 @@ $activePage = 'customers';
         <input class="modal-input" type="date" id="add_settlement_date" name="settlement_date" />
       </div>
 
-      <div class="modal-footer" style="margin-top:16px;">
-        <button type="button" class="modal-btn btn-cancel" onclick="closeModal('addModal')">Cancel</button>
-        <button type="submit" class="modal-btn btn-primary">Add Customer</button>
-      </div>
+      
     </form>
   </div>
 </div>

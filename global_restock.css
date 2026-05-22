@@ -66,11 +66,13 @@ body {
   --padding-22: 22px;
 
   /* ── Border Radius ── */
+  --br-2:   2px;
   --br-3_3: 3.3px;
   --br-5_5: 5.5px;
   --br-10:  10px;
   --br-15:  15px;
   --br-20:  20px;
+  --br-231: 231px;
 
   /* ── Fonts ── */
   --font-inter:  Inter, sans-serif;

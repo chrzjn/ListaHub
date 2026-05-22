@@ -270,11 +270,8 @@ $activePage = 'restock';
         <!-- Low on Stock -->
         <div class="stat-card cream-bg">
           <div class="stat-icon icon-gray">
-            <!--
-              TODO: Replace with your low-stock icon image.
-              e.g. <img src="pics_icons/arrow-trend-down.png" width="33" alt="Low Stock"/>
-            -->
-            <i class="bi bi-graph-down-arrow" style="font-size:28px;"></i>
+            <img src="pics_icons/arrow-trend-down.png" width="33" alt="Low Stock"/>
+            
           </div>
           <div class="stat-info">
             <span class="stat-label">Low on Stock</span>
@@ -291,7 +288,7 @@ $activePage = 'restock';
           </div>
           <div class="stat-info">
             <span class="stat-label">Near Expiry</span>
-            <span class="stat-value blue"><?= (int)($counts['near_expiry'] ?? 0) ?> product<?= (int)($counts['near_expiry'] ?? 0) !== 1 ? 's' : '' ?></span>
+            <span class="stat-value blue"><?= (int)($counts['near_expiry'] ?? 0) ?> Product<?= (int)($counts['near_expiry'] ?? 0) !== 1 ? 's' : '' ?></span>
           </div>
         </div>
 

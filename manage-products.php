@@ -387,7 +387,7 @@ $activePage = 'manage-products';
     --color-gray-100: #212934;
     --color-gray-200: rgba(62, 44, 35, 0.8);
     --color-gray-300: rgba(43, 43, 43, 0.8);
-    --color-gray-400: rgba(0, 0, 0, 0.2);
+    --color-gray-400:     rgba(62, 44, 35, 0.8);
     --color-khaki: rgba(235, 214, 101, 0.66);
     --text-brown: #3e2c23;
     --gap-4: 4px;
@@ -960,7 +960,7 @@ $activePage = 'manage-products';
           </div>
           <div class="stat-text">
             <span class="stat-label">Near Expiry</span>
-            <span class="stat-value"><?= (int)($stats['near_expiry'] ?? 0) ?> product<?= ((int)($stats['near_expiry'] ?? 0)) !== 1 ? 's' : '' ?></span>
+            <span class="stat-value"><?= (int)($stats['near_expiry'] ?? 0) ?> Product<?= ((int)($stats['near_expiry'] ?? 0)) !== 1 ? 's' : '' ?></span>
           </div>
         </div>
 

@@ -223,20 +223,20 @@ body {
 
 .col-type {
   flex: 1;
-  min-width: var(--min-w-135);
-  max-width: var(--max-w-139_3);
+  min-width: var(--min-w-160);
+  max-width: var(--max-w-225);
   position: relative;
   display: inline-block;
   text-align: center;
 }
 
 .col-item {
-  flex: 1;
+  flex: 2;
   min-width: var(--min-w-225);
   max-width: 100%;
   position: relative;
   display: inline-block;
-  text-align: left;
+  text-align: center;
 }
 
 .col-stock-before {
@@ -336,20 +336,21 @@ body {
   font-weight: 600;
   font-size: var(--fs-14);
   display: inline-block;
-  min-width: var(--min-w-135);
-  max-width: var(--max-w-139_3);
+  min-width: var(--min-w-160);
+  max-width: var(--max-w-225);
   text-align: center;
 }
 
 .cell-item {
-  flex: 1;
+  flex: 2;
   position: relative;
   font-size: var(--fs-14);
   display: inline-block;
   min-width: var(--min-w-225);
   max-width: 100%;
-  text-align: left;
+  text-align: center;
   font-style: italic;
+
 }
 
 .cell-stock-before {

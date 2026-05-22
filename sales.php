@@ -262,13 +262,7 @@ $chartValuesJson = json_encode($chartValues);
               <!-- Row 1: Total Items Sold | Today's Sales -->
               <div class="status-row">
                 <div class="status-card cream">
-                  <div class="card-icon-wrap icon-yellow">
-                    <!--
-                      TODO: Replace src with your items-sold icon.
-                      e.g. src="pics_icons/Group-494.svg"
-                    -->
-                    <img class="card-icon" alt="" src="pics_icons/bags-shopping.png"/>
-                  </div>
+                  
                   <div class="card-text">
                     <span class="card-label">Total Items Sold</span>
                     <h3 class="card-value items">
@@ -278,13 +272,7 @@ $chartValuesJson = json_encode($chartValues);
                 </div>
 
                 <div class="status-card lavender">
-                  <div class="card-icon-wrap icon-blue">
-                    <!--
-                      TODO: Replace src with your today's-sales / calendar icon.
-                      e.g. src="pics_icons/Group-494.svg"
-                    -->
-                    <img class="card-icon" alt="" src="pics_icons/growth-chart-invest.png"/>
-                  </div>
+                  
                   <div class="card-text">
                     <span class="card-label">Today's Sales</span>
                     <h3 class="card-value">₱<?= number_format((float) ($todayRow['todays_revenue'] ?? 0), 0) ?></h3>
@@ -295,13 +283,7 @@ $chartValuesJson = json_encode($chartValues);
               <!-- Row 2: Sales this Month (full width) -->
               <div class="status-bottom">
                 <div class="status-card cream full-width">
-                  <div class="card-icon-wrap icon-yellow">
-                    <!--
-                      TODO: Replace src with your monthly-sales icon.
-                      e.g. src="pics_icons/Group-494.svg"
-                    -->
-                    <img class="card-icon" alt="" src="pics_icons/payroll-calendar.png"/>
-                  </div>
+                  
                   <div class="card-text">
                     <span class="card-label">Sales this Month</span>
                     <h3 class="card-value items">₱<?= number_format((float) ($monthRow['month_revenue'] ?? 0), 0) ?></h3>
@@ -389,14 +371,8 @@ $chartValuesJson = json_encode($chartValues);
               <!-- Row 2: Total Retail Value of Stock (full width) -->
               <div class="goods-bottom">
                 <div class="goods-mini-card green-wide" style="flex:1;min-width:100%;">
-                  <div class="mini-icon-wrap icon-green">
-                    <!--
-                      TODO: Replace src with your money-bag/stock icon.
-                      e.g. src="pics_icons/money (5).png"
-                    -->
-                    <img class="mini-icon" alt="" src="pics_icons/money (5).png"/>
-                  </div>
-                  <div class="mini-text">
+                  
+                  <div class="mini-text" style="align-items:center; width:100%; text-align:center;">
                     <span class="mini-label">Total Retail Value of Stock</span>
                     <h3 class="mini-value">₱<?= number_format((float) s('total_retail_value'), 0) ?></h3>
                   </div>

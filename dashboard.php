@@ -212,8 +212,8 @@ $activePage = 'dashboard';
             </div>
 
             <!-- Near Expiration -->
-            <div class="stat-card cream-bg">
-              <div class="stat-icon icon-gray">
+            <div class="stat-card lavender-bg">
+              <div class="stat-icon icon-blue">
 
                   <img src="pics_icons/duration-alt.png" width="33" alt="Near Expiry"/>
 

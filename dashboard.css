@@ -10,7 +10,7 @@
 }
 
 body {
-  font-family: var(--font-inter), Inter, sans-serif;
+  font-family: var(--font-inter);
   /*
     NOTE: Replace the url() below with your background image path.
     e.g. background-image: url('./public/Home-Dashboard@3x.png');
