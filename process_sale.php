@@ -71,7 +71,7 @@ if ($type === 'cash') {
     // The pay_method label is informational; the DB payment_method = 'cash'
 
     if ($tendered < $total) {
-        echo json_encode(['success' => false, 'message' => 'Tendered amount is less than total.']);
+        echo json_encode(['success' => false, 'message' => 'Kulang po ang pera mo.']);
         exit;
     }
 
@@ -120,7 +120,7 @@ if ($type === 'cash') {
     $custAddress = trim($data['customer_address'] ?? '');
 
     if (!$custName || !$custContact || !$custAddress) {
-        echo json_encode(['success' => false, 'message' => 'Customer info is incomplete.']);
+        echo json_encode(['success' => false, 'message' => 'Kulang pa ang info ng customer.']);
         exit;
     }
 

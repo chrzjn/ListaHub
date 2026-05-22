@@ -34,7 +34,7 @@ body {
 
 .main-body {
   flex: 1;
-  padding: 20px 16px 16px;
+  padding: 10px 16px 16px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;

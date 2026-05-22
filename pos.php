@@ -454,7 +454,7 @@ document.getElementById('btn-checkout').addEventListener('click', function() {
     return;
   }
   if (payMethod !== 'utang' && tendered < total) {
-    alert('Amount tendered (₱' + tendered.toFixed(2) + ') is less than the total (₱' + total.toFixed(2) + ').');
+    alert('Yung pera mo na (₱' + tendered.toFixed(2) + ') ay kulang sa amount ng mga binili mo (₱' + total.toFixed(2) + ').');
     return;
   }
 

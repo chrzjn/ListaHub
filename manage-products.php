@@ -892,6 +892,15 @@ $activePage = 'manage-products';
     .edit-modal-title { font-size: 19px; }
     .edit-fields-row { flex-wrap: wrap; }
   }
+  .main-body {
+  flex: 1;
+  padding: 20px 10px 10px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
   </style>
 </head>
 <body>
