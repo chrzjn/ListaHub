@@ -105,6 +105,7 @@ try {
     // Customer credit stats
     // Customer table has no user_id — scope via Sale > Sale_Item > Product
     // For single-user systems, just read all customers directly
+    // Scope customers to this user via Sale → Sale_Item → Product → user_id
     $custStmt = $pdo->prepare(
         "SELECT
             COUNT(DISTINCT c.customer_id)                                      AS total_customers,
@@ -119,9 +120,17 @@ try {
              JOIN Sale s ON s.sale_id = d.sale_id
              WHERE s.customer_id IS NOT NULL
              GROUP BY s.customer_id
-         ) d_agg ON d_agg.customer_id = c.customer_id"
+         ) d_agg ON d_agg.customer_id = c.customer_id
+         WHERE c.customer_id IN (
+             SELECT DISTINCT s2.customer_id
+             FROM Sale s2
+             JOIN Sale_Item si ON si.sale_id = s2.sale_id
+             JOIN Product p    ON p.product_id = si.product_id
+             WHERE p.user_id = :user_id
+               AND s2.customer_id IS NOT NULL
+         )"
     );
-    $custStmt->execute([]);
+    $custStmt->execute([':user_id' => $user_id]);
     $custRow = $custStmt->fetch();
 
     // Inventory status percentages for progress bars
