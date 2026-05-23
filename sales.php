@@ -93,11 +93,23 @@ try {
          )"
     );
     $txStmt->execute([':user_id' => $user_id]);
-    $txRow = $txStmt->fetch(PDO::FETCH_ASSOC);
+    $txRow = $txStmt->fetch();
+
+    // Distinct products sold (matches sales page)
+    $soldStmt = $pdo->prepare(
+        "SELECT COUNT(DISTINCT si.product_id) AS total_products_sold
+         FROM Sale_Item si
+         JOIN Product p ON p.product_id = si.product_id
+         WHERE p.user_id = :user_id"
+    );
+    $soldStmt->execute([':user_id' => $user_id]);
+    $soldRow = $soldStmt->fetch();
+
+    // Monthly revenue breakdown (last 6 months)
 
     // ── Total distinct products sold ──────────────────────────────────
     $itemsStmt = $pdo->prepare(
-        "SELECT COUNT(DISTINCT si.product_id) AS total_products
+        "SELECT COALESCE(SUM(si.quantity_sold), 0) AS total_products
          FROM Sale_Item si
          JOIN Product p ON p.product_id = si.product_id
          WHERE p.user_id = :user_id"
@@ -436,7 +448,7 @@ $chartValuesJson = json_encode($chartValues);
       const v    = (niceMax / steps) * i;
       const span = document.createElement('span');
       span.className = 'y-tick';
-      span.textContent = '$' + (v >= 1000 ? (v / 1000).toFixed(0) + ',000' : v.toFixed(0));
+      span.textContent = '₱' + (v >= 1000 ? (v / 1000).toFixed(0) + ',000' : v.toFixed(0));
       yAxis.appendChild(span);
     }
   }

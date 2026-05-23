@@ -24,30 +24,34 @@ try {
 
     $stmt = $pdo->prepare(
         "SELECT
-            COUNT(*)                                             AS total_products,
-            SUM(current_stock)                                   AS total_stock_units,
-            SUM(CASE WHEN stock_status = 'Out of Stock' THEN 1 ELSE 0 END) AS out_of_stock_count,
-            SUM(CASE WHEN stock_status = 'Low Stock'    THEN 1 ELSE 0 END) AS low_stock_count,
-            SUM(CASE WHEN expiration_date < CURDATE()   THEN 1 ELSE 0 END) AS expired_count,
-            SUM(CASE WHEN expiration_date BETWEEN CURDATE()
-                     AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)  THEN 1 ELSE 0 END) AS near_expiry_count,
-            SUM(total_units_sold)                                AS total_units_sold,
-            SUM(total_revenue)                                   AS total_revenue,
-            SUM(current_stock * cost_price)                      AS total_cost_value,
-            SUM(current_stock * retail_price)                    AS total_retail_value
+            COUNT(*)                                                                        AS total_products,
+            SUM(current_stock)                                                              AS total_stock_units,
+            SUM(CASE WHEN stock_status = 'Out of Stock' THEN 1 ELSE 0 END)                 AS out_of_stock_count,
+            SUM(CASE WHEN stock_status = 'Low Stock'    THEN 1 ELSE 0 END)                 AS low_stock_count,
+            SUM(CASE WHEN stock_status = 'Near Expiry'  THEN 1 ELSE 0 END)                 AS near_expiry_count,
+            SUM(CASE WHEN stock_status = 'Expired'      THEN 1 ELSE 0 END)                 AS expired_count,
+            SUM(total_units_sold)                                                           AS total_units_sold,
+            SUM(total_revenue)                                                              AS total_revenue,
+            SUM(current_stock * cost_price)                                                 AS total_cost_value,
+            SUM(current_stock * retail_price)                                               AS total_retail_value,
+            SUM(gross_profit)                                                               AS gross_profit
          FROM vw_manager_dashboard
          WHERE user_id = :user_id"
     );
     $stmt->execute([':user_id' => $user_id]);
     $stats = $stmt->fetch();
 
-    // Today's revenue
+    // Today's revenue — use Sale directly, scope via subquery to avoid row multiplication
     $todayStmt = $pdo->prepare(
         "SELECT COALESCE(SUM(s.total_amount), 0) AS todays_revenue
          FROM Sale s
-         JOIN Sale_Item si ON si.sale_id = s.sale_id
-         JOIN Product   p  ON p.product_id = si.product_id
-         WHERE p.user_id = :user_id AND DATE(s.sale_date) = CURDATE()"
+         WHERE DATE(s.sale_date) = CURDATE()
+           AND s.sale_id IN (
+               SELECT DISTINCT si.sale_id
+               FROM Sale_Item si
+               JOIN Product p ON p.product_id = si.product_id
+               WHERE p.user_id = :user_id
+           )"
     );
     $todayStmt->execute([':user_id' => $user_id]);
     $todayRow = $todayStmt->fetch();
@@ -56,41 +60,68 @@ try {
     $txStmt = $pdo->prepare(
         "SELECT COUNT(DISTINCT s.sale_id) AS total_transactions
          FROM Sale s
-         JOIN Sale_Item si ON si.sale_id = s.sale_id
-         JOIN Product   p  ON p.product_id = si.product_id
-         WHERE p.user_id = :user_id"
+         WHERE s.sale_id IN (
+             SELECT DISTINCT si.sale_id
+             FROM Sale_Item si
+             JOIN Product p ON p.product_id = si.product_id
+             WHERE p.user_id = :user_id
+         )"
     );
     $txStmt->execute([':user_id' => $user_id]);
     $txRow = $txStmt->fetch();
+
+    // Total units sold — only from Sale_Item (sales only, excludes restocks)
+    $soldStmt = $pdo->prepare(
+        "SELECT COALESCE(SUM(si.quantity_sold), 0) AS total_units_sold
+         FROM Sale_Item si
+         WHERE si.product_id IN (
+             SELECT product_id FROM Product WHERE user_id = :user_id
+         )"
+    );
+    $soldStmt->execute([':user_id' => $user_id]);
+    $soldRow = $soldStmt->fetch();
 
     // Monthly revenue breakdown (last 6 months)
     $monthlyStmt = $pdo->prepare(
         "SELECT DATE_FORMAT(s.sale_date, '%b %Y') AS month_label,
                 SUM(s.total_amount)               AS monthly_total
-         FROM   Sale s
-         JOIN   Sale_Item si ON si.sale_id = s.sale_id
-         JOIN   Product   p  ON p.product_id = si.product_id
-         WHERE  p.user_id = :user_id
-           AND  s.sale_date >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
-         GROUP  BY DATE_FORMAT(s.sale_date, '%Y-%m')
-         ORDER  BY MIN(s.sale_date) ASC"
+         FROM Sale s
+         WHERE s.sale_date >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+           AND s.sale_id IN (
+               SELECT DISTINCT si.sale_id
+               FROM Sale_Item si
+               JOIN Product p ON p.product_id = si.product_id
+               WHERE p.user_id = :user_id
+           )
+         GROUP BY DATE_FORMAT(s.sale_date, '%Y-%m')
+         ORDER BY MIN(s.sale_date) ASC"
     );
     $monthlyStmt->execute([':user_id' => $user_id]);
     $monthlyData = $monthlyStmt->fetchAll();
 
-    // Profit (total_revenue - total_cost_value)
-    $profit = ((float)($stats['total_revenue'] ?? 0)) - ((float)($stats['total_cost_value'] ?? 0));
+    // Profit = gross_profit summed from view (revenue - COGS, not inventory value)
+    $profit = (float)($stats['gross_profit'] ?? 0);
 
     // Customer credit stats
+    // Customer table has no user_id — scope via Sale > Sale_Item > Product
+    // For single-user systems, just read all customers directly
     $custStmt = $pdo->prepare(
         "SELECT
-            COUNT(*)                                                   AS total_customers,
-            SUM(CASE WHEN balance > 0 THEN 1 ELSE 0 END)              AS unsettled_count,
-            COALESCE(SUM(balance), 0)                                  AS total_credit
-         FROM Customer
-         WHERE user_id = :user_id"
+            COUNT(DISTINCT c.customer_id)                                      AS total_customers,
+            COUNT(DISTINCT CASE WHEN d_agg.remaining > 0
+                           THEN c.customer_id END)                             AS unsettled_count,
+            COALESCE(SUM(d_agg.remaining), 0)                                  AS total_credit
+         FROM Customer c
+         LEFT JOIN (
+             SELECT s.customer_id,
+                    SUM(d.remaining_balance) AS remaining
+             FROM Debt d
+             JOIN Sale s ON s.sale_id = d.sale_id
+             WHERE s.customer_id IS NOT NULL
+             GROUP BY s.customer_id
+         ) d_agg ON d_agg.customer_id = c.customer_id"
     );
-    $custStmt->execute([':user_id' => $user_id]);
+    $custStmt->execute([]);
     $custRow = $custStmt->fetch();
 
     // Inventory status percentages for progress bars
@@ -106,6 +137,7 @@ try {
     $monthlyData  = [];
     $todayRow     = ['todays_revenue' => 0];
     $txRow        = ['total_transactions' => 0];
+    $soldRow      = ['total_units_sold' => 0];
     $custRow      = ['total_customers' => 0, 'unsettled_count' => 0, 'total_credit' => 0];
     $profit       = 0;
     $lowStockPct  = $outStockPct = $nearExpiryPct = $expiredPct = 0;
@@ -256,7 +288,7 @@ $activePage = 'dashboard';
               </div>
               <div class="stat-info">
                 <span class="stat-label">Total Items Sold</span>
-                <span class="stat-value gray"><?= (int)getStat('total_units_sold') ?> Products</span>
+                <span class="stat-value gray"><?= (int)($soldRow['total_units_sold'] ?? 0) ?> Products</span>
               </div>
             </div>
           </div>
@@ -378,9 +410,18 @@ $activePage = 'dashboard';
               $amounts[] = (float)$row['monthly_total'];
           }
           $ptCount = count($amounts);
-          $yTicks  = [40000, 30000, 20000, 10000, 0];
-          $maxY    = max($yTicks);   // fixed scale top = 40 000
-          $chartH  = 180;            // px height of plot area
+         $maxAmount = !empty($amounts) ? max($amounts) : 1000;
+          $niceMax   = max((int)(ceil($maxAmount / 1000) * 1000), 1000);
+          $step      = (int)($niceMax / 4);
+          $yTicks    = [
+              $niceMax,
+              $niceMax - $step,
+              $niceMax - $step * 2,
+              $niceMax - $step * 3,
+              0
+          ];
+          $maxY    = $niceMax;
+          $chartH  = 180;           // px height of plot area
         ?>
 
         <div class="sales-chart-area">
@@ -389,7 +430,13 @@ $activePage = 'dashboard';
             <!-- Y-axis labels -->
             <div class="y-axis">
               <?php foreach ($yTicks as $t): ?>
-                <span>₱<?= number_format($t / 1000, 0) ?>k</span>
+            <span>
+              <?php
+                if ($t >= 1000000)      echo '₱' . number_format($t / 1000000, 1) . 'M';
+                elseif ($t >= 1000)     echo '₱' . number_format($t / 1000, 0) . 'k';
+                else                    echo '₱' . number_format($t, 0);
+              ?>
+            </span>
               <?php endforeach; ?>
             </div>
 

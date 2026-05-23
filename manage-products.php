@@ -345,13 +345,15 @@ try {
     $total_products = (int) $countStmt->fetchColumn();
 
     $statsStmt = $pdo->prepare(
-        "SELECT
-            SUM(CASE WHEN quantity = 0 THEN 1 ELSE 0 END)                                               AS out_of_stock,
-            SUM(CASE WHEN expiration_date < CURDATE() AND expiration_date IS NOT NULL THEN 1 ELSE 0 END) AS expired,
-            SUM(CASE WHEN quantity > 0 AND quantity < low_stock_threshold THEN 1 ELSE 0 END)             AS low_stock,
-            SUM(CASE WHEN expiration_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY) THEN 1 ELSE 0 END) AS near_expiry
-         FROM Product WHERE user_id = :user_id"
-    );
+    "SELECT
+        SUM(CASE WHEN quantity = 0 THEN 1 ELSE 0 END)                                                          AS out_of_stock,
+        SUM(CASE WHEN expiration_date IS NOT NULL AND expiration_date < CURDATE() THEN 1 ELSE 0 END)            AS expired,
+        SUM(CASE WHEN quantity > 0 AND quantity < low_stock_threshold THEN 1 ELSE 0 END) AS low_stock,
+        SUM(CASE WHEN expiration_date IS NOT NULL
+                  AND expiration_date BETWEEN CURDATE()
+                  AND DATE_ADD(CURDATE(), INTERVAL 30 DAY) THEN 1 ELSE 0 END)                                  AS near_expiry
+     FROM Product WHERE user_id = :user_id"
+);
     $statsStmt->execute([':user_id' => $user_id]);
     $stats = $statsStmt->fetch(PDO::FETCH_ASSOC);
 
