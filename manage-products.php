@@ -520,6 +520,7 @@ $activePage = 'manage-products';
   <link rel="stylesheet" href="global_manage-products.css"/>
   <link rel="stylesheet" href="sidebar.css"/>
   <link rel="stylesheet" href="manage-products.css"/>
+  <link rel="stylesheet" href="main-body.css"/>
 
   <style>
   /* ── CSS Variables (from global.css of the edit overlay design) ── */

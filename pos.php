@@ -46,6 +46,7 @@ $activePage = 'pos';
   <link rel="stylesheet" href="global_pos.css"/>
   <link rel="stylesheet" href="sidebar.css"/>
   <link rel="stylesheet" href="pos.css"/>
+  <link rel="stylesheet" href="main-body.css"/>
 
   <style>
     .table-wrap {

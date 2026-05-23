@@ -182,6 +182,7 @@ $chartValuesJson = json_encode($chartValues);
   <!-- Component CSS -->
   <link rel="stylesheet" href="sidebar.css"/>
   <link rel="stylesheet" href="sales.css"/>
+  <link rel="stylesheet" href="main-body.css"/>
 
   <!--
     Google Fonts – Inter

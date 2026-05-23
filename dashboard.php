@@ -181,6 +181,7 @@ $activePage = 'dashboard';
   <!-- Component CSS -->
   <link rel="stylesheet" href="sidebar.css"/>
   <link rel="stylesheet" href="dashboard.css"/>
+  <link rel="stylesheet" href="main-body.css"/>
 </head>
 <body>
 

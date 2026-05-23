@@ -2,35 +2,36 @@
 body {
   margin: 0;
   line-height: normal;
+  position: relative;
 }
 
 :root {
   /* ── Spacing ── */
-  --Space-0:   0px;
+  --Space-0: 0px;
   --Space-050: 2px;
 
   /* ── Brand Colors ── */
-  --yellow:         #ebd665;
-  --yellow-white:   #fdf3db;
+  --yellow: #ebd665;
+  --yellow-white: #fdf3db;
   --yellow-white-1: #fcf8ee;
 
   /* ── UI Colors ── */
-  --color-black:    #000;
+  --color-black: #000;
   --color-cornsilk: #fff5d9;
   --color-gray-100: #3e2c23;
   --color-gray-200: #2b2b2b;
   --color-gray-300: rgba(0, 0, 0, 0.01);
 
   /* ── Gap ── */
-  --gap-6:  6px;
+  --gap-6: 6px;
   --gap-10: 10px;
   --gap-15: 15px;
   --gap-20: 20px;
 
   /* ── Padding ── */
-  --padding-0:  0px;
-  --padding-4:  4px;
-  --padding-5:  5px;
+  --padding-0: 0px;
+  --padding-4: 4px;
+  --padding-5: 5px;
   --padding-10: 10px;
   --padding-13: 13px;
   --padding-14: 14px;
@@ -39,9 +40,9 @@ body {
 
   /* ── Border Radius ── */
   --br-5_5: 5.5px;
-  --br-10:  10px;
-  --br-15:  15px;
-  --br-20:  20px;
+  --br-10: 10px;
+  --br-15: 15px;
+  --br-20: 20px;
 
   /* ── Font ── */
   --font-inter: Inter, sans-serif;
@@ -55,6 +56,7 @@ body {
 
   /* ── Width / Heights ── */
   --width-24: 24px;
+  --height-24: 24px;
 
   /* ── Letter Spacing ── */
   --ls--0_04: -0.04;

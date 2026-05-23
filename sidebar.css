@@ -1,13 +1,8 @@
-/* sidebar.css */
-
-/* ============================================================
-   SIDEBAR SHELL
-   ============================================================ */
 .sidebar {
   width: 260px;
   min-width: 260px;
-  height: 100vh;
-  min-height: 880px;
+  height: calc(100vh - 20px);
+  max-height: calc(100vh - 20px);
   backdrop-filter: blur(46.2px);
   border-radius: var(--br-10);
   background: linear-gradient(
@@ -15,11 +10,12 @@
     rgba(255, 245, 166, 0.85),
     rgba(255, 184, 166, 0.85)
   );
-  border: 2px solid rgba(43, 43, 43, 0.15);
+  border: 2px solid #2b2b2b;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  justify-content: space-between;
   padding: var(--padding-15);
   box-sizing: border-box;
   gap: var(--gap-10);
@@ -28,30 +24,53 @@
   color: var(--color-black);
   font-family: var(--font-inter);
   flex-shrink: 0;
-  position: sticky;
-  top: 0;
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  bottom: 10px;
+  z-index: 10;
+}
+
+.sidebar-main {
+  flex: 1 1 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-10);
+  min-height: 0;
 }
 
 /* ── Logo ── */
 .logos {
   width: 100%;
-  height: 82px;
+  height: 85px;
   position: relative;
   margin-bottom: 4px;
   display: flex;
   align-items: center;
   justify-content: flex-start;
+  flex-shrink: 0;
 }
 
 .listahub-logo {
-  /*
-    TODO: set src to your logo image.
-    e.g. src="pics_icons/ListaHub-logo-2-1.png"
-  */
-  max-width: 210px;
-  width: 100%;
+  position: absolute;
   height: 100%;
-  object-fit: contain;
+  width: 100%;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  box-shadow:
+    29px 25px 11px transparent,
+    18px 16px 10px rgba(0, 0, 0, 0.01),
+    10px 9px 8px rgba(0, 0, 0, 0.02),
+    5px 4px 6px rgba(0, 0, 0, 0.03),
+    1px 1px 3px rgba(0, 0, 0, 0.04);
+  border-radius: 10px;
+  max-width: 100%;
+  overflow: hidden;
+  max-height: 100%;
+  object-fit: fill;
 }
 
 /* ── Menu items base ── */
@@ -65,7 +84,9 @@
   text-decoration: none;
   color: var(--color-black);
   cursor: pointer;
-  transition: background 0.18s ease, border 0.18s ease;
+  transition:
+    background 0.18s ease,
+    border 0.18s ease;
   font-family: var(--font-inter);
   box-sizing: border-box;
 }
@@ -76,10 +97,10 @@
   border: 2px solid transparent;
   box-shadow:
     -15px -13px 6px transparent inset,
-    -10px -8px  5px rgba(44, 44, 44, 0.01) inset,
-    -5px  -5px  4px rgba(44, 44, 44, 0.03) inset,
-    -2px  -2px  3px rgba(44, 44, 44, 0.04) inset,
-    -1px  -1px  2px rgba(44, 44, 44, 0.05) inset;
+    -10px -8px 5px rgba(44, 44, 44, 0.01) inset,
+    -5px -5px 4px rgba(44, 44, 44, 0.03) inset,
+    -2px -2px 3px rgba(44, 44, 44, 0.04) inset,
+    -1px -1px 2px rgba(44, 44, 44, 0.05) inset;
 }
 
 .menus.active {
@@ -103,7 +124,7 @@
 }
 
 .menus2:hover:not(.active) {
-  background-color: rgba(235, 214, 101, 0.30);
+  background-color: rgba(235, 214, 101, 0.3);
 }
 
 /* Icon inside any menu link */
@@ -126,10 +147,10 @@
 /* ── Section group (INVENTORY / SALES / CUSTOMER CREDIT) ── */
 .inventory-container {
   align-self: stretch;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  overflow: visible;
   padding: var(--Space-050) 0 var(--Space-0);
   gap: var(--gap-6);
 }
@@ -138,7 +159,7 @@
   font-size: 12px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: rgba(62, 44, 35, 0.60);
+  color: rgba(62, 44, 35, 0.6);
   padding-left: 4px;
   text-transform: uppercase;
   position: relative;
@@ -146,7 +167,6 @@
 
 /* ── Logout / Owner area ── */
 .logout-container {
-  margin-top: auto;
   align-self: stretch;
   overflow: hidden;
   display: flex;
@@ -156,6 +176,9 @@
   font-size: 15px;
   color: var(--color-gray-100);
   font-family: var(--font-inter);
+  flex-shrink: 0;
+  padding-top: 6px;
+  border-top: 1px solid rgba(43, 43, 43, 0.1);
 }
 
 .owner-container {
@@ -166,7 +189,7 @@
 }
 
 .owner-card {
-  flex: 1;
+  width: 100%;
   backdrop-filter: blur(43.3px);
   border-radius: 7.7px;
   overflow: hidden;
@@ -235,7 +258,7 @@
   font-size: 12px;
   font-weight: 500;
   letter-spacing: -0.04em;
-  color: rgba(62, 44, 35, 0.70);
+  color: rgba(62, 44, 35, 0.7);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -244,7 +267,7 @@
 /* Logout button */
 .menus7 {
   cursor: pointer;
-  border: 1px solid rgba(43, 43, 43, 0.20);
+  border: 1px solid rgba(43, 43, 43, 0.2);
   padding: var(--padding-10) var(--padding-20);
   background-color: transparent;
   align-self: stretch;
@@ -254,13 +277,15 @@
   align-items: center;
   justify-content: center;
   gap: var(--gap-10);
-  transition: background 0.18s, border-color 0.18s;
+  transition:
+    background 0.18s,
+    border-color 0.18s;
   font-family: var(--font-inter);
 }
 
 .menus7:hover {
   background-color: rgba(235, 69, 58, 0.12);
-  border-color: rgba(235, 69, 58, 0.40);
+  border-color: rgba(235, 69, 58, 0.4);
 }
 
 .menu6 {
@@ -269,4 +294,121 @@
   font-weight: 500;
   font-family: var(--font-inter);
   color: var(--color-black);
+}
+
+@media (max-height: 860px) {
+  .sidebar {
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .logos {
+    height: 72px;
+    margin-bottom: 0;
+  }
+
+  .menus2 {
+    padding: 10px 16px;
+  }
+
+  .inventory-container {
+    gap: 4px;
+  }
+
+  .logout-container {
+    padding-top: 4px;
+  }
+
+  .owner-container {
+    padding-top: 6px;
+    padding-bottom: 2px;
+  }
+
+  .owner-card {
+    padding: 8px 8px 8px 10px;
+    gap: 10px;
+  }
+
+  .image-parent,
+  .image {
+    width: 40px;
+    height: 40px;
+  }
+
+  .store-icon {
+    width: 26px;
+    height: 26px;
+  }
+
+  .owner-name {
+    font-size: 13px;
+  }
+
+  .owner-store {
+    font-size: 11px;
+  }
+
+  .menus7 {
+    padding: 8px 16px;
+  }
+
+  .menu,
+  .menu6 {
+    font-size: 14px;
+  }
+}
+
+@media (max-height: 700px) {
+  .sidebar {
+    gap: 6px;
+    padding: 10px;
+  }
+
+  .logos {
+    height: 60px;
+  }
+
+  .menus2 {
+    padding: 8px 14px;
+  }
+
+  .menu {
+    font-size: 13px;
+  }
+
+  .inventory-label {
+    font-size: 11px;
+  }
+
+  .owner-card {
+    padding: 7px 7px 7px 9px;
+    gap: 8px;
+  }
+
+  .image-parent,
+  .image {
+    width: 34px;
+    height: 34px;
+  }
+
+  .store-icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .owner-name {
+    font-size: 12px;
+  }
+
+  .owner-store {
+    font-size: 10px;
+  }
+
+  .menus7 {
+    padding: 7px 14px;
+  }
+
+  .menu6 {
+    font-size: 13px;
+  }
 }

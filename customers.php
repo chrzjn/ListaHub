@@ -334,6 +334,7 @@ $activePage = 'customers';
   <link rel="stylesheet" href="global_customers.css" />
   <link rel="stylesheet" href="sidebar.css" />
   <link rel="stylesheet" href="customers.css" />
+  <link rel="stylesheet" href="main-body.css" />
 
   <style>
   .edit-customer-box {

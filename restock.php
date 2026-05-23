@@ -458,6 +458,7 @@ $activePage = 'restock';
   <link rel="stylesheet" href="global_restock.css"/>
   <link rel="stylesheet" href="sidebar.css"/>
   <link rel="stylesheet" href="restock.css"/>
+  <link rel="stylesheet" href="main-body.css"/>
 
   <style>
   /* ═══════════════════════════════════════════════════════
