@@ -126,14 +126,14 @@ function transactionLabel(string $ref_type, string $movement, string $reason = '
     return match($ref_type) {
         'restock'           => 'Product Restock',
         'sale'              => 'Sold',
-        'expired_deletion'  => 'Expired & Deleted',
+        'expired_deletion'  => 'Deleted Expired Items',
         'product_addition'  => 'Product Addition',
         'product_edit'      => 'Product Edit',
         'manual'            => match($reason) {
             'Other'                  => 'Product Deletion',
+            'Expired Items'          => 'Deleted Expired Items',
             'Stock Count Correction' => 'Stock Correction',
             'Damaged Goods'          => 'Damaged Goods',
-            'Expired Items'          => 'Expired Items',
             'Theft/Loss'             => 'Theft / Loss',
             'Returned to Supplier'   => 'Returned to Supplier',
             default                  => 'Manual Adjustment',

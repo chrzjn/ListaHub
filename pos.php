@@ -60,10 +60,51 @@ $activePage = 'pos';
       display: flex;
       flex-direction: column;
     }
+    #pos-modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+}
+#pos-modal-box {
+  background: #fff;
+  border-radius: 12px;
+  padding: 32px 28px 24px;
+  min-width: 300px; max-width: 420px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  font-family: inherit;
+}
+#pos-modal-icon  { font-size: 2.4rem; margin-bottom: 8px; }
+#pos-modal-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 8px; color: #1a1a2e; }
+#pos-modal-body  { font-size: 0.95rem; color: #444; line-height: 1.6; margin-bottom: 20px; white-space: pre-line; }
+#pos-modal-btn {
+  background: #4f46e5; color: #fff;
+  border: none; border-radius: 8px;
+  padding: 10px 32px; font-size: 1rem;
+  cursor: pointer; transition: background .2s;
+}
+#pos-modal-btn:hover { background: #4338ca; }
+
+/* type variants */
+#pos-modal-box.success #pos-modal-btn { background: #16a34a; }
+#pos-modal-box.success #pos-modal-btn:hover { background: #15803d; }
+#pos-modal-box.error   #pos-modal-btn { background: #dc2626; }
+#pos-modal-box.error   #pos-modal-btn:hover { background: #b91c1c; }
   </style>
 </head>
 <body>
-
+<div id="pos-modal-overlay" style="display:none;" onclick="closePosModal()">
+  <div id="pos-modal-box" onclick="event.stopPropagation()">
+  <div id="pos-modal-icon"></div>
+  <div id="pos-modal-title"></div>
+  <div id="pos-modal-body"></div>
+  <div style="display:flex; gap:10px; justify-content:center;">
+    <button id="pos-modal-cancel-btn" onclick="cancelPosModal()" style="display:none; background:#6b7280; color:#fff; border:none; border-radius:8px; padding:10px 32px; font-size:1rem; cursor:pointer;">Cancel</button>
+    <button id="pos-modal-btn" onclick="closePosModal()">OK</button>
+  </div>
+</div>
+</div>
 <div class="page-wrapper">
   <?php $activePage = 'pos'; include 'sidebar.php'; ?>
 
@@ -469,12 +510,13 @@ document.getElementById('btn-checkout').addEventListener('click', function() {
   var items    = getItemCount();
   var tendered = getTendered();
 
-  if (items === 0) {
-    alert('No items added to the cart.');
+if (items === 0) {
+    showPosModal('warning', 'Empty Cart', 'No items added to the cart.');
     return;
   }
   if (payMethod !== 'utang' && tendered < total) {
-    alert('Yung pera mo na (₱' + tendered.toFixed(2) + ') ay kulang sa amount ng mga binili mo (₱' + total.toFixed(2) + ').');
+    showPosModal('warning', 'Insufficient Amount',
+      'Yung pera mo na (₱' + tendered.toFixed(2) + ') ay kulang sa amount ng mga binili mo (₱' + total.toFixed(2) + ').');
     return;
   }
 
@@ -491,7 +533,9 @@ document.getElementById('btn-checkout').addEventListener('click', function() {
       'CHANGE:   ₱' + change.toFixed(2),
       '', 'Proceed with checkout?'
     ].join('\n');
-    if (confirm(msg)) submitCashSale(total, tendered, change);
+    showPosModal('info', 'Confirm Checkout', msg, function() {
+    submitCashSale(total, tendered, change);
+    });
   }
 });
 
@@ -523,16 +567,17 @@ function submitCashSale(total, tendered, change) {
     btnCheckout.disabled    = false;
     btnCheckout.textContent = 'Check out';
     if (data.success) {
-      alert('Transaction complete!\nReceipt #' + data.sale_id + '\nChange: ₱' + change.toFixed(2));
-      resetPOS();
+      showPosModal('success', 'Transaction Complete!',
+        'Receipt #' + data.sale_id + '\nChange: ₱' + change.toFixed(2),
+        function() { window.location.reload(); });
     } else {
-      alert('Error: ' + (data.message || 'Unknown error.'));
+      showPosModal('error', 'Something went wrong', data.message || 'Unknown error.');
     }
   })
   .catch(function(err) {
     btnCheckout.disabled    = false;
     btnCheckout.textContent = 'Check out';
-    alert('Network error. Please try again.\n' + err.message);
+    showPosModal('error', 'Network Error', 'Please try again.\n' + err.message);
   });
 }
 
@@ -610,17 +655,18 @@ function submitUtangSale(custName, custAddress, custContact, custNotes) {
     btnCheckout.disabled    = false;
     btnCheckout.textContent = 'Check out';
     if (data.success) {
-      alert('Utang recorded!\nReceipt #' + data.sale_id + '\nCustomer: ' + custName + '\nAmount: ₱' + total.toFixed(2));
+      showPosModal('success', 'Utang Recorded!',
+        'Receipt #' + data.sale_id + '\nCustomer: ' + custName + '\nAmount: ₱' + total.toFixed(2),
+        function() { window.location.href = 'customers.php'; });
       resetPOS();
-      window.location.href = 'customers.php';
     } else {
-      alert('Error: ' + (data.message || 'Unknown error.'));
+      showPosModal('error', 'Something went wrong', data.message || 'Unknown error.');
     }
   })
   .catch(function(err) {
     btnCheckout.disabled    = false;
     btnCheckout.textContent = 'Check out';
-    alert('Network error. Please try again.\n' + err.message);
+    showPosModal('error', 'Network Error', 'Please try again.\n' + err.message);
   });
 }
 
@@ -672,6 +718,36 @@ function renderPage() {
   var btnNext = document.getElementById('btn-next');
   btnPrev.disabled = (currentPage <= 1);
   btnNext.disabled = (currentPage >= maxPage);
+}
+
+function showPosModal(type, title, body, onClose) {
+  var icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+  var box = document.getElementById('pos-modal-box');
+  box.className = type;
+  document.getElementById('pos-modal-icon').textContent  = icons[type] || '';
+  document.getElementById('pos-modal-title').textContent = title;
+  document.getElementById('pos-modal-body').textContent  = body;
+  box._onClose = onClose || null;
+
+  // show Cancel button only on confirmation dialogs (those with an onClose callback)
+  document.getElementById('pos-modal-cancel-btn').style.display = onClose ? 'inline-block' : 'none';
+
+  document.getElementById('pos-modal-overlay').style.display = 'flex';
+}
+
+function closePosModal() {
+  document.getElementById('pos-modal-overlay').style.display = 'none';
+  var box = document.getElementById('pos-modal-box');
+  if (typeof box._onClose === 'function') {
+    box._onClose();
+    box._onClose = null;
+  }
+}
+
+function cancelPosModal() {
+  document.getElementById('pos-modal-overlay').style.display = 'none';
+  var box = document.getElementById('pos-modal-box');
+  box._onClose = null;  // discard callback — sale does NOT proceed
 }
 
 document.getElementById('btn-prev').addEventListener('click', function() {

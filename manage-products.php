@@ -42,7 +42,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($action === 'delete') {
     $product_id = (int) ($_POST['product_id'] ?? 0);
     if ($product_id) {
-        // Snapshot before delete
         $snapStmt = $pdo->prepare(
             "SELECT quantity, product_name, expiration_date, status
              FROM Product WHERE product_id = :id AND user_id = :user_id"
@@ -51,32 +50,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $snap = $snapStmt->fetch();
 
         if ($snap) {
-            $pdo->beginTransaction();
-
             $is_expired = (!empty($snap['expiration_date']) && $snap['expiration_date'] < date('Y-m-d'))
                            || $snap['status'] === 'Expired';
+            $snap_qty  = (int)$snap['quantity'];
+            $snap_name = $snap['product_name'];
 
-            if (!$is_expired && (int)$snap['quantity'] > 0) {
-                $logStmt = $pdo->prepare(
-                    "INSERT INTO Inventory_Log
-                        (product_id, user_id, product_name_snap, movement_type, quantity_change,
-                         stock_before, stock_after, reference_type, adjustment_reason)
-                     VALUES (:pid, :uid, :pname, 'out', :qty_change, :qty_before, 0, 'manual', 'Other')"
-                );
-                $logStmt->execute([
-                    ':pid'        => $product_id,
-                    ':uid'        => $user_id,
-                    ':pname'      => $snap['product_name'],
-                    ':qty_change' => (int)$snap['quantity'],
-                    ':qty_before' => (int)$snap['quantity'],
-                ]);
-            }
-
+            $pdo->beginTransaction();
             $del = $pdo->prepare(
                 "DELETE FROM Product WHERE product_id = :id AND user_id = :user_id"
             );
             $del->execute([':id' => $product_id, ':user_id' => $user_id]);
             $pdo->commit();
+
+            // Log AFTER delete — product_id FK is SET NULL on delete so this is safe
+            try {
+                $pdo2 = getPDO();
+                if ($is_expired && $snap_qty > 0) {
+                    // Expired product deletion
+                    $logStmt = $pdo2->prepare(
+                        "INSERT INTO Inventory_Log
+                            (product_id, user_id_snap, product_name_snap, movement_type, quantity_change,
+                             stock_before, stock_after, reference_type, adjustment_reason)
+                         VALUES (NULL, :uid, :pname, 'out', :qty, :before, 0, 'expired_deletion', 'Expired Items')"
+                    );
+                    $logStmt->execute([
+                                ':pname'  => $snap_name,
+                                ':qty'    => $snap_qty,
+                                ':before' => $snap_qty,
+                                ':uid'    => $user_id,
+                            ]);
+                } elseif (!$is_expired && $snap_qty > 0) {
+                    // Normal product deletion
+                    $logStmt = $pdo2->prepare(
+                        "INSERT INTO Inventory_Log
+                            (product_id, user_id_snap, product_name_snap, movement_type, quantity_change,
+                             stock_before, stock_after, reference_type, adjustment_reason)
+                         VALUES (NULL, :uid, :pname, 'out', :qty, :before, 0, 'manual', 'Other')"
+                    );
+                    $logStmt->execute([
+                                ':pname'  => $snap_name,
+                                ':qty'    => $snap_qty,
+                                ':before' => $snap_qty,
+                                ':uid'    => $user_id,
+                            ]);
+                }
+            } catch (PDOException $logEx) {
+                error_log("Delete log error: " . $logEx->getMessage());
+            }
+
             $message = 'Product deleted successfully.';
         }
     }
@@ -158,24 +179,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $added_sku = $skuStmt->fetchColumn() ?: '';
 
                     // Log product addition
+                    // Log product addition
                     try {
-                        $pdo2 = getPDO();
-                        if ($quantity > 0) {
+                        $pdo2    = getPDO();
+                        $log_qty = max(1, $quantity);
                         $logStmt = $pdo2->prepare(
                             "INSERT INTO Inventory_Log
-                                (product_id, user_id, product_name_snap, movement_type, quantity_change,
-                                 stock_before, stock_after, reference_type, adjustment_reason)
-                             VALUES (:pid, :uid, :pname, 'in', :qty, 0, :qty2, 'product_addition', NULL)"
+                                (product_id, product_name_snap, movement_type,
+                                 quantity_change, stock_before, stock_after,
+                                 reference_type, adjustment_reason)
+                             VALUES
+                                (:pid, :pname, 'in',
+                                 :qty, 0, :after,
+                                 'product_addition', NULL)"
                         );
                         $logStmt->execute([
                             ':pid'   => $new_id,
                             ':pname' => $product_name,
-                            ':qty'   => max(1, $quantity),
-                            ':qty2'  => $quantity,
+                            ':qty'   => $log_qty,
+                            ':after' => $quantity,
                         ]);
-                    }
-                    } catch (PDOException $e) {
-                        error_log("Product addition log error: " . $e->getMessage());
+                    } catch (PDOException $logEx) {
+                        error_log("Product addition log error: " . $logEx->getMessage());
                     }
 
                     $add_flash_msg  = 'Product "' . htmlspecialchars($product_name) . '" added successfully!' .
@@ -287,55 +312,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     // Log the edit if quantity changed
+                 // Snapshot BEFORE commit so we get old quantity
                     $oldStmt = $pdo->prepare(
                         "SELECT quantity, product_name FROM Product
                          WHERE product_id = :id AND user_id = :user_id"
                     );
                     $oldStmt->execute([':id' => $product_id, ':user_id' => $user_id]);
-                    $oldSnap  = $oldStmt->fetch();
-                    $old_qty  = (int)($oldSnap['quantity'] ?? 0);
-                    $old_name = $oldSnap['product_name'] ?? '';
+                    $oldSnap = $oldStmt->fetch();
+                    $old_qty = (int)($oldSnap['quantity'] ?? 0);
 
                     $pdo->commit();
 
-                    // Log product edit
+                    // Log product edit — always logs, qty_change=1 if no qty change
                     try {
-                        $pdo2 = getPDO();
-                        // Only log if quantity actually changed
-                    $qty_after_update = $quantity;
-                    if ($qty_after_update !== $old_qty) {
-                        $qty_diff   = $qty_after_update - $old_qty;
-                        $move_type  = $qty_diff > 0 ? 'in' : 'out';
-                        $qty_change = abs($qty_diff);
-                        $logStmt = $pdo2->prepare(
-                            "INSERT INTO Inventory_Log
-                                (product_id, product_name_snap, movement_type, quantity_change,
-                                 stock_before, stock_after, reference_type, adjustment_reason)
-                             VALUES (:pid, :pname, 'in', :qty, 0, :qty2, 'product_addition', NULL)"
-                        );
-                        $logStmt->execute([
-                            ':pid'    => $product_id,
-                            ':uid'    => $user_id,
-                            ':pname'  => $product_name,
-                            ':move'   => $move_type,
-                            ':change' => $qty_change,
-                            ':before' => $old_qty,
-                            ':after'  => $qty_after_update,
-                        ]);
-                    }
-                    } catch (PDOException $e) {
-                        error_log("Product edit log error: " . $e->getMessage());
-                    }
-
-                    // Log the edit to Inventory_Log
-                    try {
-                        $pdo3 = getPDO();
-                        $qty_diff   = $quantity - $old_qty;
-                        $move_type  = $qty_diff >= 0 ? 'in' : 'out';
-                        $qty_change = abs($qty_diff) > 0 ? abs($qty_diff) : 1;
+                        $pdo2    = getPDO();
+                        $qty_diff    = $quantity - $old_qty;
+                        $move_type   = $qty_diff >= 0 ? 'in' : 'out';
+                        $qty_change  = abs($qty_diff) > 0 ? abs($qty_diff) : 1;
                         $stock_after = $qty_diff !== 0 ? $quantity : $old_qty;
 
-                        $logStmt = $pdo3->prepare(
+                        $logStmt = $pdo2->prepare(
                             "INSERT INTO Inventory_Log
                                 (product_id, product_name_snap, movement_type,
                                  quantity_change, stock_before, stock_after,
@@ -1033,6 +1029,24 @@ $activePage = 'manage-products';
   gap: 18px;
   min-width: 0;
 }
+#del-modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+}
+#del-modal-box {
+  background: #fff;
+  border-radius: 12px;
+  padding: 32px 28px 24px;
+  min-width: 300px; max-width: 420px;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  font-family: inherit;
+}
+#del-modal-icon  { font-size: 2.4rem; margin-bottom: 8px; }
+#del-modal-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 8px; color: #1a1a2e; }
+#del-modal-body  { font-size: 0.95rem; color: #444; line-height: 1.6; }
   </style>
 </head>
 <body>
@@ -1175,6 +1189,7 @@ $activePage = 'manage-products';
 
             <div class="thead">
               <div class="thead-row">
+                <b class="col-img" style="white-space:nowrap;">View Image</b>
                 <b class="col-name">Product Name</b>
                 <b class="col-sku">SKU</b>
                 <b class="col-category">Category</b>
@@ -1201,6 +1216,21 @@ $activePage = 'manage-products';
                   ?>
                   <div class="tbody-row" data-hidden="">
                     <div class="tbody-row-content">
+                      <div class="col-img">
+                        <?php if (!empty($p['image_url'])): ?>
+                          <img
+                            src="<?= htmlspecialchars($p['image_url']) ?>"
+                            class="prod-thumb"
+                            onclick="openImgPreview('<?= htmlspecialchars($p['image_url']) ?>', '<?= htmlspecialchars(addslashes($p['product_name'])) ?>')"
+                            alt="<?= htmlspecialchars($p['product_name']) ?>"
+                            style="width:60px;height:60px;object-fit:cover;border-radius:6px;border:1px solid rgba(62,44,35,0.2);cursor:pointer;display:block;flex-shrink:0;"
+                          />
+                        <?php else: ?>
+                          <div class="prod-thumb-empty" style="width:60px;height:60px;border-radius:6px;border:1px dashed rgba(62,44,35,0.2);display:flex;align-items:center;justify-content:center;color:rgba(62,44,35,0.3);font-size:24px;flex-shrink:0;cursor:default;">
+                              <i class="bi bi-image"></i>
+                          </div>
+                        <?php endif; ?> 
+                      </div>
                       <span class="col-name col-name-val"><?= htmlspecialchars($p['product_name']) ?></span>
                       <span class="col-sku  col-sku-val"><?= htmlspecialchars($p['sku'] ?? '—') ?></span>
                       <span class="col-category col-category-val"><?= htmlspecialchars($p['category_name']) ?></span>
@@ -1220,8 +1250,7 @@ $activePage = 'manage-products';
                           <i class="bi bi-eye"></i>
                         </button>
 
-                        <form class="delete-form" method="post"
-                              onsubmit="return confirm('Delete this product?')">
+                        <form class="delete-form" method="post">
                           <input type="hidden" name="action" value="delete"/>
                           <input type="hidden" name="product_id" value="<?= (int)$p['product_id'] ?>"/>
                           <button class="action-btn delete-btn" type="submit" title="Delete">
@@ -1546,6 +1575,25 @@ $activePage = 'manage-products';
   </div>
 </div>
 
+<div id="del-modal-overlay" style="display:none;" onclick="cancelDelModal()">
+  <div id="del-modal-box" onclick="event.stopPropagation()">
+    <div id="del-modal-icon">🗑️</div>
+    <div id="del-modal-title">Delete Product</div>
+    <div id="del-modal-body">Are you sure you want to delete this product? This cannot be undone.</div>
+    <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+      <button onclick="cancelDelModal()" style="background:#6b7280; color:#fff; border:none; border-radius:8px; padding:10px 32px; font-size:1rem; cursor:pointer;">Cancel</button>
+      <button id="del-modal-confirm-btn" style="background:#dc2626; color:#fff; border:none; border-radius:8px; padding:10px 32px; font-size:1rem; cursor:pointer;">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div id="img-preview-overlay" style="display:none;" onclick="closeImgPreview()">
+  <div id="img-preview-box" onclick="event.stopPropagation()">
+    <button id="img-preview-close" onclick="closeImgPreview()"><i class="bi bi-x-lg"></i></button>
+    <img id="img-preview-src" src="" alt=""/>
+    <div id="img-preview-name"></div>
+  </div>
+</div>
 
 <!-- Category autocomplete datalist (shared) -->
 <datalist id="cat-list">
@@ -1784,8 +1832,9 @@ function toggleExpiry(checkbox, inputId) {
 // ESC closes any open overlay
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
-    if (editOverlay.classList.contains('is-open')) closeEditOverlay();
-    if (addOverlay.classList.contains('is-open'))  closeAddOverlay();
+    if (document.getElementById('img-preview-overlay').style.display === 'flex') closeImgPreview();
+    else if (editOverlay.classList.contains('is-open')) closeEditOverlay();
+    else if (addOverlay.classList.contains('is-open'))  closeAddOverlay();
   }
 });
 
@@ -1842,6 +1891,44 @@ if (btnNext) btnNext.addEventListener('click', function() { currentPage++; rende
 ───────────────────────────────────────────────────────────── */
 function exportInventory() {
   window.location.href = 'export_inventory.php';
+}
+
+var _pendingDeleteForm = null;
+
+function cancelDelModal() {
+  document.getElementById('del-modal-overlay').style.display = 'none';
+  _pendingDeleteForm = null;
+}
+
+document.querySelectorAll('.delete-form').forEach(function(form) {
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    _pendingDeleteForm = form;
+    document.getElementById('del-modal-overlay').style.display = 'flex';
+    document.getElementById('del-modal-confirm-btn').onclick = function() {
+      document.getElementById('del-modal-overlay').style.display = 'none';
+      _pendingDeleteForm.submit();
+    };
+  });
+});
+
+function openImgPreview(src, name) {
+  var overlay = document.getElementById('img-preview-overlay');
+  document.getElementById('img-preview-src').src          = src;
+  document.getElementById('img-preview-name').textContent = name;
+  overlay.style.display        = 'flex';
+  overlay.style.position       = 'fixed';
+  overlay.style.inset          = '0';
+  overlay.style.background     = 'rgba(0,0,0,0.65)';
+  overlay.style.alignItems     = 'center';
+  overlay.style.justifyContent = 'center';
+  overlay.style.zIndex         = '10000';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeImgPreview() {
+  document.getElementById('img-preview-overlay').style.display = 'none';
+  document.body.style.overflow = '';
 }
 
 /* Init */

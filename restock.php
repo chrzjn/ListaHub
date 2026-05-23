@@ -259,38 +259,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $snap = $snapStmt->fetch();
 
             if ($snap) {
-                $pdo->beginTransaction();
-
                 $is_expired = (!empty($snap['expiration_date']) && $snap['expiration_date'] < date('Y-m-d'))
                                || $snap['status'] === 'Expired';
+                $snap_qty  = (int)$snap['quantity'];
+                $snap_name = $snap['product_name'];
 
-                if (!$is_expired && (int)$snap['quantity'] > 0) {
-                    $logStmt = $pdo->prepare(
-                        "INSERT INTO Inventory_Log
-                            (product_id, user_id, product_name_snap, movement_type, quantity_change,
-                            stock_before, stock_after, reference_type, adjustment_reason)
-                        VALUES (:pid, :uid, :pname, 'out', :qty_change, :qty_before, 0, 'manual', 'Other')"
-                    );
-                    $logStmt->execute([
-                        ':pid'        => $product_id,
-                        ':uid'        => $user_id,
-                        ':pname'      => $snap['product_name'],
-                        ':qty_change' => (int)$snap['quantity'],
-                        ':qty_before' => (int)$snap['quantity'],
-                    ]);
-                }
-
+                $pdo->beginTransaction();
                 $del = $pdo->prepare(
                     "DELETE FROM Product WHERE product_id = :id AND user_id = :uid"
                 );
                 $del->execute([':id' => $product_id, ':uid' => $user_id]);
 
-                // Check if anything was actually deleted
                 if ($del->rowCount() === 0) {
                     $pdo->rollBack();
                     $error = 'Product not found or access denied.';
                 } else {
                     $pdo->commit();
+
+                    // Log AFTER delete — product_id SET NULL on FK so use NULL
+                    try {
+                        $pdo2 = getPDO();
+                        if ($is_expired && $snap_qty > 0) {
+                            $logStmt = $pdo2->prepare(
+                                "INSERT INTO Inventory_Log
+                            (product_id, user_id_snap, product_name_snap, movement_type, quantity_change,
+                             stock_before, stock_after, reference_type, adjustment_reason)
+                         VALUES (NULL, :uid, :pname, 'out', :qty, :before, 0, 'expired_deletion', 'Expired Items')"
+                            );
+                            $logStmt->execute([
+                                ':pname'  => $snap_name,
+                                ':qty'    => $snap_qty,
+                                ':before' => $snap_qty,
+                                ':uid'    => $user_id,
+                            ]);
+                        } elseif (!$is_expired && $snap_qty > 0) {
+                            $logStmt = $pdo2->prepare(
+                                "INSERT INTO Inventory_Log
+                            (product_id, user_id_snap, product_name_snap, movement_type, quantity_change,
+                             stock_before, stock_after, reference_type, adjustment_reason)
+                         VALUES (NULL, :uid, :pname, 'out', :qty, :before, 0, 'manual', 'Other')"
+                            );
+                            $logStmt->execute([
+                                ':pname'  => $snap_name,
+                                ':qty'    => $snap_qty,
+                                ':before' => $snap_qty,
+                                ':uid'    => $user_id,
+                            ]);
+                        }
+                    } catch (PDOException $logEx) {
+                        error_log("Restock delete log error: " . $logEx->getMessage());
+                    }
+
                     $message = 'Product deleted successfully.';
                 }
             } else {
@@ -299,7 +318,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } catch (PDOException $e) {
             if (isset($pdo) && $pdo->inTransaction()) $pdo->rollBack();
             error_log("Restock delete error: " . $e->getMessage());
-            $error = 'Database error: ' . $e->getMessage(); // show full error temporarily
+            $error = 'Database error: ' . $e->getMessage();
         }
     }
   }
@@ -797,6 +816,89 @@ $activePage = 'restock';
     .eo-title { font-size: 19px; }
     .eo-fields-row { flex-wrap: wrap; }
   }
+  #del-modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999;
+  }
+  #del-modal-box {
+    background: #fff;
+    border-radius: 12px;
+    padding: 32px 28px 24px;
+    min-width: 300px; max-width: 420px;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    font-family: inherit;
+  }
+  #del-modal-icon  { font-size: 2.4rem; margin-bottom: 8px; }
+  #del-modal-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 8px; color: #1a1a2e; }
+  #del-modal-body  { font-size: 0.95rem; color: #444; line-height: 1.6; }
+  #img-preview-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+#img-preview-box {
+  position: relative;
+  border-radius: 15px;
+  padding: 20px 20px 16px;
+  width: 360px;
+  max-width: 90vw;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+  background: linear-gradient(
+    146.01deg,
+    rgba(253, 253, 253, 0.98),
+    rgba(254, 246, 227, 0.98) 49.52%,
+    rgba(255, 244, 216, 0.98)
+  );
+  border: 1px solid #3e2c23;
+  animation: popIn 0.18s ease;
+}
+#img-preview-src {
+  width: 320px;
+  height: 320px;
+  max-width: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid rgba(62, 44, 35, 0.2);
+  display: block;
+  margin: 0 auto;
+}
+#img-preview-name {
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #3e2c23;
+  font-family: Inter, sans-serif;
+}
+#img-preview-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(112, 94, 87, 0.09);
+  border: 1px solid rgba(62, 44, 35, 0.2);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  color: #3e2c23;
+  transition: background 0.15s;
+}
+#img-preview-close:hover { background: rgba(62, 44, 35, 0.14); }
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
   </style>
 </head>
 <body>
@@ -869,6 +971,7 @@ $activePage = 'restock';
         <div class="toolbar-left">
 
           <form method="get" style="display:contents;">
+          <form method="get" style="display:contents;">
             <input type="hidden" name="tab"  value="<?= htmlspecialchars($tab) ?>"/>
             <input type="hidden" name="page" value="1"/>
             <div class="searchbar">
@@ -908,6 +1011,7 @@ $activePage = 'restock';
             <table class="restock-table">
               <thead>
                 <tr>
+                  <th style="width:72px; text-align:center; white-space:nowrap; padding-left: 16px;">View Image</th>
                   <th>Product Name</th>
                   <th>SKU</th>
                   <th>Category</th>
@@ -922,7 +1026,7 @@ $activePage = 'restock';
               <tbody>
                 <?php if (empty($products)): ?>
                   <tr class="empty-state">
-                    <td colspan="9">No products found.</td>
+                    <td colspan="10">No products found.</td>
                   </tr>
                 <?php else: ?>
                   <?php foreach ($products as $p):
@@ -954,6 +1058,20 @@ $activePage = 'restock';
                     $batchName    = 'batch[' . (int)$p['product_id'] . ']';
                   ?>
                   <tr>
+                    <td style="width:72px; text-align:center; vertical-align:middle; padding:6px 10px;">
+                      <?php if (!empty($p['image_url'])): ?>
+                        <img
+                          src="<?= htmlspecialchars($p['image_url']) ?>"
+                          onclick="openImgPreview('<?= htmlspecialchars($p['image_url']) ?>', '<?= htmlspecialchars(addslashes($p['product_name'])) ?>')"
+                          alt="<?= htmlspecialchars($p['product_name']) ?>"
+                          style="width:60px;height:60px;object-fit:cover;border-radius:6px;border:1px solid rgba(62,44,35,0.2);cursor:pointer;display:block;margin:0 auto;flex-shrink:0;"
+                        />
+                      <?php else: ?>
+                        <div style="width:60px;height:60px;border-radius:6px;border:1px dashed rgba(62,44,35,0.2);display:flex;align-items:center;justify-content:center;color:rgba(62,44,35,0.3);font-size:24px;flex-shrink:0;cursor:default;margin:0 auto;">
+                          <i class="bi bi-image"></i>
+                        </div>
+                      <?php endif; ?>
+                    </td>
                     <td class="td-product-name"><?= htmlspecialchars($p['product_name']) ?></td>
                     <td class="td-sku"><?= htmlspecialchars($p['sku']) ?></td>
                     <td class="td-category"><?= htmlspecialchars($p['category_name']) ?></td>
@@ -1370,11 +1488,58 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape' && editOverlay.classList.contains('is-open')) closeEditOverlay();
 });
 function deleteProduct(productId) {
-  if (!confirm('Sure ka na bang idedelete? Hindi na to mababalik.')) return;
-  document.getElementById('delete-product-id').value = productId;
-  document.getElementById('delete-product-form').submit();
+  document.getElementById('del-modal-overlay').style.display = 'flex';
+  document.getElementById('del-modal-confirm-btn').onclick = function() {
+    document.getElementById('del-modal-overlay').style.display = 'none';
+    document.getElementById('delete-product-id').value = productId;
+    document.getElementById('delete-product-form').submit();
+  };
 }
+
+function cancelDelModal() {
+  document.getElementById('del-modal-overlay').style.display = 'none';
+}
+
+function openImgPreview(src, name) {
+  var overlay = document.getElementById('img-preview-overlay');
+  document.getElementById('img-preview-src').src          = src;
+  document.getElementById('img-preview-name').textContent = name;
+  overlay.style.display        = 'flex';
+  overlay.style.position       = 'fixed';
+  overlay.style.inset          = '0';
+  overlay.style.background     = 'rgba(0,0,0,0.65)';
+  overlay.style.alignItems     = 'center';
+  overlay.style.justifyContent = 'center';
+  overlay.style.zIndex         = '10000';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeImgPreview() {
+  document.getElementById('img-preview-overlay').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
 </script>
+
+<div id="del-modal-overlay" style="display:none;" onclick="cancelDelModal()">
+  <div id="del-modal-box" onclick="event.stopPropagation()">
+    <div id="del-modal-icon">🗑️</div>
+    <div id="del-modal-title">Delete Product</div>
+    <div id="del-modal-body">Sure ka na bang idedelete? Hindi na to mababalik.</div>
+    <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+      <button onclick="cancelDelModal()" style="background:#6b7280; color:#fff; border:none; border-radius:8px; padding:10px 32px; font-size:1rem; cursor:pointer;">Cancel</button>
+      <button id="del-modal-confirm-btn" style="background:#dc2626; color:#fff; border:none; border-radius:8px; padding:10px 32px; font-size:1rem; cursor:pointer;">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div id="img-preview-overlay" style="display:none;" onclick="closeImgPreview()">
+  <div id="img-preview-box" onclick="event.stopPropagation()">
+    <button id="img-preview-close" onclick="closeImgPreview()"><i class="bi bi-x-lg"></i></button>
+    <img id="img-preview-src" src="" alt=""/>
+    <div id="img-preview-name"></div>
+  </div>
+</div>
 
 <!-- Standalone delete form — must be inside body, outside batch form -->
 <form method="post" id="delete-product-form" style="display:none;">
