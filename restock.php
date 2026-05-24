@@ -971,7 +971,17 @@ $activePage = 'restock';
 
       <div class="table-toolbar">
         <div class="toolbar-left">
-
+           <!-- Pagination Row -->
+          <div class="pagination-row">
+            <?php if ($current_page > 1): ?>
+              <a href="<?= htmlspecialchars(pageUrl($current_page - 1, $tab, $search)) ?>" class="btn-page">
+                <i class="bi bi-arrow-left"></i> Prev
+              </a>
+            <?php else: ?>
+              <button class="btn-page" disabled >
+                <i class="bi bi-arrow-left"></i> Prev
+              </button>
+            <?php endif; ?>
           <form method="get" style="display:contents;">
           <form method="get" style="display:contents;">
             <input type="hidden" name="tab"  value="<?= htmlspecialchars($tab) ?>"/>
@@ -1002,8 +1012,21 @@ $activePage = 'restock';
           </div>
 
         </div>
+        <?php if ($current_page < $total_pages): ?>
+              <a href="<?= htmlspecialchars(pageUrl($current_page + 1, $tab, $search)) ?>" class="btn-page">
+                Next <i class="bi bi-arrow-right"></i>
+              </a>
+            <?php else: ?>
+              <button class="btn-page" disabled>
+                Next <i class="bi bi-arrow-right"></i>
+              </button>
+            <?php endif; ?>
+            </div>
       </div>
+     
 
+            
+          
       <!-- Batch restock form — wraps the entire table so Complete can collect all qty inputs -->
       <form method="post" id="batch-restock-form">
         <input type="hidden" name="action" value="batch_restock"/>
@@ -1145,28 +1168,7 @@ $activePage = 'restock';
           </div>
         </div>
       </div>
-        <!-- Pagination Row -->
-        <div class="pagination-row">
-          <?php if ($current_page > 1): ?>
-            <a href="<?= htmlspecialchars(pageUrl($current_page - 1, $tab, $search)) ?>" class="btn-page">
-              <i class="bi bi-arrow-left"></i> Prev
-            </a>
-          <?php else: ?>
-            <button class="btn-page" disabled >
-              <i class="bi bi-arrow-left"></i> Prev
-            </button>
-          <?php endif; ?>
-
-          <?php if ($current_page < $total_pages): ?>
-            <a href="<?= htmlspecialchars(pageUrl($current_page + 1, $tab, $search)) ?>" class="btn-page">
-              Next <i class="bi bi-arrow-right"></i>
-            </a>
-          <?php else: ?>
-            <button class="btn-page" disabled >
-              Next <i class="bi bi-arrow-right"></i>
-            </button>
-          <?php endif; ?>
-        </div>
+                        
 
         <!-- Bottom Actions -->
         <div class="bottom-actions">

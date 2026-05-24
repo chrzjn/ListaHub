@@ -200,7 +200,7 @@ body {
   padding: 7px 16px;
   flex: 1;
   min-width: 100px;
-  max-width: 300px;
+  max-width: 200px;
 }
 
 .searchbar img,
@@ -280,8 +280,7 @@ body {
   letter-spacing: -0.04em;
   height: 41px;
   display: flex;
-  align-items: right;
-  justify-content: right;
+  align-items: center;
   text-align: right;
   gap: var(--gap-6);
   transition: background 0.18s;
