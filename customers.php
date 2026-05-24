@@ -306,19 +306,33 @@ $activePage = 'customers';
   <link rel="stylesheet" href="global_customers.css" />
   <link rel="stylesheet" href="sidebar.css" />
   <link rel="stylesheet" href="customers.css" />
+  <link rel="stylesheet" href="main-body.css" />
 
   <style>
   .edit-customer-box {
     max-width: 560px !important;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
     background: linear-gradient(
-      146deg,
-      rgba(253,253,253,0.58),
-      rgba(254,246,227,0.49) 50%,
-      rgba(255,244,216,0.6)
-    ) !important;
-    border: 2px solid #3e2c23 !important;
+        146.01deg,
+        rgba(253, 253, 253, 0.58),
+        rgba(254, 246, 227, 0.49) 49.52%,
+        rgba(255, 244, 216, 0.6)
+      ),
+      linear-gradient(rgba(252, 248, 238, 0.2), rgba(252, 248, 238, 0.2)) !important;
+    border-radius: 15px !important;
+    border: 2px solid var(--text-brown) !important;
+    box-shadow: 36px 30px 13px transparent,
+                23px 19px 12px rgba(62, 44, 35, 0.01),
+                13px 11px 10px rgba(62, 44, 35, 0.05),
+                6px 5px 8px rgba(62, 44, 35, 0.09),
+                1px 1px 4px rgba(62, 44, 35, 0.1) !important;
+    backdrop-filter: blur(20.6px);
+    -webkit-backdrop-filter: blur(20.6px);
     gap: 0 !important;
-    padding: 20px !important;
+    padding: 17px 15px !important;
+    animation: modalIn 0.2s ease;
   }
   .ec-header {
     display: flex;

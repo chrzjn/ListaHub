@@ -119,17 +119,19 @@
   background-color: var(--color-burlywood);
   box-shadow:
     -15.1px -13.1px 6px transparent inset,
-    -10.1px -8.1px 5px rgba(44,44,44,0.01) inset,
-    -5px -5px 4px rgba(44,44,44,0.03) inset,
-    -2px -2px 3px rgba(44,44,44,0.04) inset,
-    -1px -1px 2px rgba(44,44,44,0.05) inset;
+    -10.1px -8.1px 5px rgba(44, 44, 44, 0.01) inset,
+    -5px -5px 4px rgba(44, 44, 44, 0.03) inset,
+    -2px -2px 3px rgba(44, 44, 44, 0.04) inset,
+    -1px -1px 2px rgba(44, 44, 44, 0.05) inset;
   border-radius: 10.1px;
   display: flex;
   align-items: center;
   text-decoration: none;
   transition: opacity 0.2s;
 }
-.menus:hover { opacity: 0.85; }
+.menus:hover {
+  opacity: 0.85;
+}
 
 .log-in {
   position: relative;
@@ -143,7 +145,7 @@
 
 /* Sign up button (ghost) */
 .menus2 {
-  filter: drop-shadow(0 4px 7px rgba(0,0,0,0.2));
+  filter: drop-shadow(0 4px 7px rgba(0, 0, 0, 0.2));
   border-radius: 10.1px;
   display: flex;
   align-items: center;
@@ -151,7 +153,9 @@
   text-decoration: none;
   transition: opacity 0.2s;
 }
-.menus2:hover { opacity: 0.75; }
+.menus2:hover {
+  opacity: 0.75;
+}
 
 .sign-up {
   position: relative;
@@ -190,12 +194,11 @@
 
 /* ══════════════════════════════════════════
    AUTH CARD
-   INSERT: card background image URL (frosted/textured card background)
-   (sign-up-card@3x.png)
+   Transparent frosted glass card with background blur
 ══════════════════════════════════════════ */
 .sign-up-card {
   width: 563px;
-  box-shadow: 0 11.4px 22.3px rgba(53,106,185,0.09);
+  box-shadow: 0 11.4px 22.3px rgba(53, 106, 185, 0.09);
   border-radius: 15px;
   display: flex;
   align-items: center;
@@ -204,12 +207,10 @@
   box-sizing: border-box;
   flex-shrink: 0;
   max-width: 100%;
-
-  /* ↓ INSERT your card background image path here */
-  background-image: url(pics_icons/sign-up-card@3x.png);
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: top;
+  background: rgba(255, 248, 235, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
 /* Form inner wrapper */
@@ -238,7 +239,10 @@
   position: absolute;
   height: 100%;
   width: 100%;
-  top: 0; right: 0; bottom: 0; left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
@@ -283,7 +287,8 @@
   overflow: hidden;
   display: flex;
   align-items: center;
-  padding: var(--padding-10) var(--padding-12) var(--padding-10) var(--padding-20);
+  padding: var(--padding-10) var(--padding-12) var(--padding-10)
+    var(--padding-20);
   gap: var(--gap-15);
   box-sizing: border-box;
 }
@@ -355,16 +360,18 @@
   background-color: var(--yellow);
   box-shadow:
     -26px -17px 9px transparent inset,
-    -17px -11px 8px rgba(44,44,44,0.01) inset,
-    -9px -6px 7px rgba(44,44,44,0.05) inset,
-    -4px -3px 5px rgba(44,44,44,0.09) inset,
-    -1px -1px 3px rgba(44,44,44,0.1) inset;
+    -17px -11px 8px rgba(44, 44, 44, 0.01) inset,
+    -9px -6px 7px rgba(44, 44, 44, 0.05) inset,
+    -4px -3px 5px rgba(44, 44, 44, 0.09) inset,
+    -1px -1px 3px rgba(44, 44, 44, 0.1) inset;
   border-radius: 231px;
   display: flex;
   align-items: center;
   justify-content: center;
   min-width: 140px;
-  transition: filter 0.2s, transform 0.15s;
+  transition:
+    filter 0.2s,
+    transform 0.15s;
 }
 .buttons:hover {
   filter: brightness(0.94);
@@ -431,7 +438,6 @@
   color: var(--off-black);
   display: inline-block;
   z-index: 2;
-  
 }
 
 .listahub-is-a {
@@ -450,8 +456,7 @@
   display: flex;
   align-items: center;
   z-index: 3;
-  line-height: 1.6; 
-  
+  line-height: 1.6;
 }
 
 /* ══════════════════════════════════════════

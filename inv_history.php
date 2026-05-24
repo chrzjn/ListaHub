@@ -181,6 +181,7 @@ $activePage = 'inv_history';
   <!-- Component CSS -->
   <link rel="stylesheet" href="sidebar.css"/>
   <link rel="stylesheet" href="inv_history.css"/>
+  <link rel="stylesheet" href="main-body.css"/>
 </head>
 <body>
 
