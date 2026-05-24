@@ -1,13 +1,7 @@
 <?php
-$code = file_get_contents('dashboard.php');
-$lines = explode("\n", $code);
-$brace = 0;
+$lines = file('inv_history.php');
 foreach ($lines as $i => $line) {
-    $brace += substr_count($line, '{') - substr_count($line, '}');
-    if ($brace < 0) {
-        echo "Extra } at line " . ($i+1) . ": " . htmlspecialchars($line) . "<br>";
-        $brace = 0;
+    if (stripos($line, 'selling_price') !== false || stripos($line, 'total_price') !== false) {
+        echo ($i+1) . ": " . htmlspecialchars($line) . "<br>";
     }
 }
-echo "Final brace count: $brace (should be 0)";
-?>

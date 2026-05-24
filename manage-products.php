@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $product_id = (int) ($_POST['product_id'] ?? 0);
     if ($product_id) {
         $snapStmt = $pdo->prepare(
-            "SELECT quantity, product_name, expiration_date, status
+            "SELECT quantity, product_name, expiration_date, status, retail_price
              FROM Product WHERE product_id = :id AND user_id = :user_id"
         );
         $snapStmt->execute([':id' => $product_id, ':user_id' => $user_id]);
@@ -65,35 +65,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Log AFTER delete — product_id FK is SET NULL on delete so this is safe
             try {
                 $pdo2 = getPDO();
-                if ($is_expired && $snap_qty > 0) {
-                    // Expired product deletion
-                    $logStmt = $pdo2->prepare(
-                        "INSERT INTO Inventory_Log
-                            (product_id, user_id_snap, product_name_snap, movement_type, quantity_change,
-                             stock_before, stock_after, reference_type, adjustment_reason)
-                         VALUES (NULL, :uid, :pname, 'out', :qty, :before, 0, 'expired_deletion', 'Expired Items')"
-                    );
-                    $logStmt->execute([
+                // Get retail price for the log
+                        $priceSnap = $pdo2->prepare(
+                            "SELECT retail_price FROM Product WHERE product_id = :id LIMIT 1"
+                        );
+                        // Product is deleted so fetch from snap or use 0
+                        $snap_price = (float)($snap['retail_price'] ?? 0);
+
+                        if ($is_expired && $snap_qty > 0) {
+                            $logStmt = $pdo2->prepare(
+                                "INSERT INTO Inventory_Log
+                                    (product_id, user_id_snap, product_name_snap, movement_type,
+                                     quantity_change, selling_price, stock_before, stock_after,
+                                     reference_type, adjustment_reason)
+                                 VALUES (NULL, :uid, :pname, 'out',
+                                         :qty, :price, :before, 0,
+                                         'expired_deletion', 'Expired Items')"
+                            );
+                            $logStmt->execute([
+                                ':uid'    => $user_id,
                                 ':pname'  => $snap_name,
                                 ':qty'    => $snap_qty,
+                                ':price'  => $snap_price,
                                 ':before' => $snap_qty,
-                                ':uid'    => $user_id,
                             ]);
-                } elseif (!$is_expired && $snap_qty > 0) {
-                    // Normal product deletion
-                    $logStmt = $pdo2->prepare(
-                        "INSERT INTO Inventory_Log
-                            (product_id, user_id_snap, product_name_snap, movement_type, quantity_change,
-                             stock_before, stock_after, reference_type, adjustment_reason)
-                         VALUES (NULL, :uid, :pname, 'out', :qty, :before, 0, 'manual', 'Other')"
-                    );
-                    $logStmt->execute([
+                        } elseif (!$is_expired && $snap_qty > 0) {
+                            $logStmt = $pdo2->prepare(
+                                "INSERT INTO Inventory_Log
+                                    (product_id, user_id_snap, product_name_snap, movement_type,
+                                     quantity_change, selling_price, stock_before, stock_after,
+                                     reference_type, adjustment_reason)
+                                 VALUES (NULL, :uid, :pname, 'out',
+                                         :qty, :price, :before, 0,
+                                         'manual', 'Other')"
+                            );
+                            $logStmt->execute([
+                                ':uid'    => $user_id,
                                 ':pname'  => $snap_name,
                                 ':qty'    => $snap_qty,
+                                ':price'  => $snap_price,
                                 ':before' => $snap_qty,
-                                ':uid'    => $user_id,
                             ]);
-                }
+                        }
             } catch (PDOException $logEx) {
                 error_log("Delete log error: " . $logEx->getMessage());
             }
@@ -186,17 +199,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $logStmt = $pdo2->prepare(
                             "INSERT INTO Inventory_Log
                                 (product_id, product_name_snap, movement_type,
-                                 quantity_change, stock_before, stock_after,
+                                 quantity_change, selling_price, stock_before, stock_after,
                                  reference_type, adjustment_reason)
                              VALUES
                                 (:pid, :pname, 'in',
-                                 :qty, 0, :after,
+                                 :qty, :price, 0, :after,
                                  'product_addition', NULL)"
                         );
                         $logStmt->execute([
                             ':pid'   => $new_id,
                             ':pname' => $product_name,
                             ':qty'   => $log_qty,
+                            ':price' => $retail_price,
                             ':after' => $quantity,
                         ]);
                     } catch (PDOException $logEx) {
@@ -334,11 +348,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $logStmt = $pdo2->prepare(
                             "INSERT INTO Inventory_Log
                                 (product_id, product_name_snap, movement_type,
-                                 quantity_change, stock_before, stock_after,
+                                 quantity_change, selling_price, stock_before, stock_after,
                                  reference_type, adjustment_reason)
                              VALUES
                                 (:pid, :pname, :move,
-                                 :change, :before, :after,
+                                 :change, :price, :before, :after,
                                  'product_edit', NULL)"
                         );
                         $logStmt->execute([
@@ -346,6 +360,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             ':pname'  => $product_name,
                             ':move'   => $move_type,
                             ':change' => $qty_change,
+                            ':price'  => $retail_price,
                             ':before' => $old_qty,
                             ':after'  => $stock_after,
                         ]);

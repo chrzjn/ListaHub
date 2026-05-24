@@ -34,13 +34,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         try {
             $pdo = getPDO();
             // Only allow deleting logs that belong to this user's products
+            // For logs with product_id (active products) — scope by user via Product
+            // For logs with NULL product_id (deleted products) — scope by user_id_snap
             $del = $pdo->prepare(
-                "DELETE il
-                 FROM Inventory_Log il
-                 JOIN Product p ON p.product_id = il.product_id
-                 WHERE il.log_id = :log_id AND p.user_id = :user_id"
+                "DELETE FROM Inventory_Log
+                 WHERE log_id = :log_id
+                   AND (
+                       product_id IN (
+                           SELECT product_id FROM Product WHERE user_id = :user_id
+                       )
+                       OR (product_id IS NULL AND user_id_snap = :user_id2)
+                   )"
             );
-            $del->execute([':log_id' => $log_id, ':user_id' => $user_id]);
+            $del->execute([
+                ':log_id'    => $log_id,
+                ':user_id'   => $user_id,
+                ':user_id2'  => $user_id,
+            ]);
 
             if ($del->rowCount() > 0) {
                 $success_msg = 'Log entry deleted successfully.';
@@ -100,6 +110,8 @@ try {
             category_name,
             movement_type,
             quantity_change,
+            selling_price,
+            total_price,
             stock_before,
             stock_after,
             reference_type,
@@ -218,8 +230,10 @@ $activePage = 'inv_history';
                     <b class="col-id">ID</b>
                     <b class="col-type">Transaction Type</b>
                     <b class="col-item">Item</b>
+                    <b class="col-price">Selling Price</b>
                     <b class="col-stock-before">Stock Before</b>
                     <b class="col-stock-after">Stock After</b>
+                    <b class="col-total">Total Price</b>
                     <b class="col-delete">Delete</b>
                   </div>
                   <div class="header-separator"></div>
@@ -255,13 +269,32 @@ $activePage = 'inv_history';
                         <span class="cell-type"><?= htmlspecialchars($tx_label) ?></span>
 
                         <!-- Item Name -->
+                        <!-- Item Name -->
                         <i class="cell-item"><?= $item_name ?></i>
+
+                        <!-- Selling Price -->
+                        <i class="cell-price">
+                          <?php if ((float)($row['selling_price'] ?? 0) > 0): ?>
+                            ₱<?= number_format((float)$row['selling_price'], 2) ?>
+                          <?php else: ?>
+                            —
+                          <?php endif; ?>
+                        </i>
 
                         <!-- Stock Before -->
                         <i class="cell-stock-before"><?= (int)$row['stock_before'] ?></i>
 
                         <!-- Stock After -->
                         <i class="cell-stock-after"><?= (int)$row['stock_after'] ?></i>
+
+                        <!-- Total Price -->
+                        <i class="cell-total">
+                          <?php if ((float)($row['total_price'] ?? 0) > 0): ?>
+                            ₱<?= number_format((float)$row['total_price'], 2) ?>
+                          <?php else: ?>
+                            —
+                          <?php endif; ?>
+                        </i>
 
                         <!-- Delete button -->
                         <div class="action-buttons">

@@ -214,11 +214,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $logStmt = $pdo->prepare(
                         "INSERT INTO Inventory_Log
                             (product_id, product_name_snap, movement_type,
-                             quantity_change, stock_before, stock_after,
+                             quantity_change, selling_price, stock_before, stock_after,
                              reference_type, adjustment_reason)
                          VALUES
                             (:pid, :pname, :move,
-                             :change, :before, :after,
+                             :change, :price, :before, :after,
                              'product_edit', NULL)"
                     );
                     $logStmt->execute([
@@ -226,6 +226,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ':pname'  => $product_name,
                         ':move'   => $move_type,
                         ':change' => $qty_change,
+                        ':price'  => $retail_price,
                         ':before' => $old_qty,
                         ':after'  => $stock_after,
                     ]);
@@ -283,8 +284,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $logStmt = $pdo2->prepare(
                                 "INSERT INTO Inventory_Log
                             (product_id, user_id_snap, product_name_snap, movement_type, quantity_change,
-                             stock_before, stock_after, reference_type, adjustment_reason)
-                         VALUES (NULL, :uid, :pname, 'out', :qty, :before, 0, 'expired_deletion', 'Expired Items')"
+                             selling_price, stock_before, stock_after, reference_type, adjustment_reason)
+                         VALUES (NULL, :uid, :pname, 'out', :qty, :price, :before, 0, 'expired_deletion', 'Expired Items')"
                             );
                             $logStmt->execute([
                                 ':pname'  => $snap_name,
@@ -1443,17 +1444,7 @@ validateExpiryRequired('edit-product-form', 'eo-expiry', 'eo-no-expiry');
 
 /* ── Complete (batch restock) ────────────────────────────── */
 function handleComplete(e) {
-  var inputs  = document.querySelectorAll('#batch-restock-form input[name^="batch["]');
-  var hasAny  = false;
-  inputs.forEach(function(inp) {
-    if (parseInt(inp.value, 10) > 0) hasAny = true;
-  });
-  if (!hasAny) {
-    e.preventDefault();
-    alert('Please enter a quantity (greater than 0) for at least one product before completing the restock.');
-    return false;
-  }
-  // Remove zero-qty inputs so they don't pollute POST (optional, PHP ignores them anyway)
+  var inputs = document.querySelectorAll('#batch-restock-form input[name^="batch["]');
   inputs.forEach(function(inp) {
     if (parseInt(inp.value, 10) <= 0) inp.disabled = true;
   });

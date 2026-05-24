@@ -11,10 +11,6 @@
 
 body {
   font-family: var(--font-inter);
-  /*
-    TODO: Replace the url() below with your background image path.
-    e.g. background-image: url('pics_icons/bg2_blank.png');
-  */
   background-image: url('pics_icons/bg2_blank.png');
   background-size: cover;
   background-repeat: no-repeat;
@@ -81,10 +77,6 @@ body {
   height: 43px;
   width: 43px;
   position: relative;
-  /*
-    TODO: This wraps the history icon image.
-    Place <img> inside with src="pics_icons/material-symbols-history-rounded.svg"
-  */
 }
 
 .page-title {
@@ -116,6 +108,7 @@ body {
   align-self: stretch;
   flex: 1;
   max-width: 100%;
+  overflow: hidden;
 }
 
 /* ─────────────────────────────────────────
@@ -127,40 +120,40 @@ body {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  max-width: 100%;
+  width: 100%;
+  overflow: hidden;
 }
 
+/* Horizontal scroll wrapper */
 .table-view {
   align-self: stretch;
   flex: 1;
-  display: flex;
+  display: block;
   box-shadow: var(--shadow-drop);
   border-radius: var(--br-10);
   background-color: var(--yellow-white-1);
   border: 1px solid var(--color-white);
-  overflow: hidden;
-  align-items: flex-start;
-  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  width: 100%;
   box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
 }
 
 .info {
-  align-self: stretch;
-  flex: 1;
-  overflow-y: auto;
+  /* Let it grow wider than the viewport — scroll handles it */
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   padding: 0 var(--padding-10) 0 0;
   box-sizing: border-box;
-  max-width: 100%;
+  width: 100%;
 }
 
 /* ─────────────────────────────────────────
-   Table
+   Table — fixed minimum width forces scroll
 ───────────────────────────────────────── */
 .inv-table {
-  align-self: stretch;
   border-radius: var(--br-10);
   background-color: #f5f0e8;
   display: flex;
@@ -168,100 +161,198 @@ body {
   align-items: flex-start;
   padding: 22px 0 var(--padding-20);
   box-sizing: border-box;
-  max-width: 100%;
+  min-width: 1100px;
   width: 100%;
 }
 
 /* ── Table Head ── */
 .thead {
-  align-self: stretch;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   height: 35px;
   justify-content: center;
-  max-width: 100%;
 }
 
 .thead .row,
 .tbody .row {
-  align-self: stretch;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  max-width: 100%;
 }
 
+/* Single row of cells — never wraps */
 .text-container {
-  align-self: stretch;
+  width: 100%;
   display: flex;
   align-items: center;
   padding: 0 var(--padding-10);
   box-sizing: border-box;
-  row-gap: var(--gap-20);
-  max-width: 100%;
+  flex-wrap: nowrap;
 }
 
-/* Column widths — match Figma exactly */
-.col-date {
+/* ─────────────────────────────────────────
+   Column definitions
+   Order: Date | ID | Type | Item | Price | Stock Before | Stock After | Total | Delete
+───────────────────────────────────────── */
+
+/* Date — fixed */
+.col-date,
+.cell-date {
   width: 130px;
+  min-width: 130px;
   flex-shrink: 0;
-  position: relative;
-  display: inline-block;
   text-align: left;
 }
 
-.col-id {
-  flex: 1;
-  min-width: var(--min-w-94);
-  max-width: var(--max-w-130);
-  position: relative;
-  display: inline-block;
-  text-align: center;
+.cell-date {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
 }
 
-.col-type {
-  flex: 1;
-  min-width: var(--min-w-160);
-  max-width: var(--max-w-225);
-  position: relative;
-  display: inline-block;
-  text-align: center;
+.cell-date i {
+  font-style: italic;
+  white-space: nowrap;
 }
 
-.col-item {
-  flex: 2;
-  min-width: var(--min-w-225);
-  max-width: 100%;
-  position: relative;
-  display: inline-block;
-  text-align: center;
-}
-
-.col-stock-before {
-  flex: 1;
-  min-width: var(--min-w-89);
-  max-width: var(--max-w-165_3);
-  position: relative;
-  display: inline-block;
-  text-align: center;
-}
-
-.col-stock-after {
-  flex: 1;
-  min-width: var(--min-w-89);
-  max-width: var(--max-w-165_3);
-  position: relative;
-  display: inline-block;
-  text-align: center;
-}
-
-.col-delete {
-  width: var(--width-70);
+/* ID */
+.col-id,
+.cell-id {
+  width: 110px;
+  min-width: 110px;
   flex-shrink: 0;
-  position: relative;
-  display: inline-block;
+  text-align: center;
+}
+
+.cell-id {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cell-id i {
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Transaction Type */
+.col-type,
+.cell-type {
+  width: 145px;
+  min-width: 145px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.cell-type {
+  font-weight: 600;
+  font-size: var(--fs-14);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Item — flex grows to fill remaining space */
+.col-item,
+.cell-item {
+  flex: 1;
+  min-width: 140px;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cell-item {
+  font-size: var(--fs-14);
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Selling Price */
+.col-price,
+.cell-price {
+  width: 110px;
+  min-width: 110px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.cell-price {
+  font-size: var(--fs-14);
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Stock Before */
+.col-stock-before,
+.cell-stock-before {
+  width: 95px;
+  min-width: 95px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.cell-stock-before {
+  font-size: var(--fs-14);
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Stock After */
+.col-stock-after,
+.cell-stock-after {
+  width: 95px;
+  min-width: 95px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.cell-stock-after {
+  font-weight: 600;
+  font-size: var(--fs-14);
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Total Price */
+.col-total,
+.cell-total {
+  width: 115px;
+  min-width: 115px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.cell-total {
+  font-weight: 600;
+  font-size: var(--fs-14);
+  font-style: italic;
+  color: var(--text-brown);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Delete — fixed */
+.col-delete {
+  width: 70px;
+  min-width: 70px;
+  flex-shrink: 0;
   text-align: center;
 }
 
@@ -275,111 +366,36 @@ body {
 
 /* ── Table Body ── */
 .tbody {
-  align-self: stretch;
+  width: 100%;
   font-size: var(--fs-13);
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  max-width: 100%;
 }
 
 .tbody .row {
-  align-self: stretch;
+  width: 100%;
   padding: var(--padding-10) 0 0;
   box-sizing: border-box;
   gap: var(--gap-10);
-  max-width: 100%;
 }
 
 .row-separator {
-  align-self: stretch;
+  width: 100%;
   height: var(--height-1);
   position: relative;
   background-color: var(--text-brown);
 }
 
-/* ── Cell styles ── */
-.cell-date {
-  width: 130px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  text-align: left;
-}
-
-.cell-date i {
-  flex: 1;
-  position: relative;
-  display: inline-block;
-  max-width: 120px;
-  font-style: italic;
-}
-
-.cell-id {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: var(--min-w-94);
-  max-width: var(--max-w-130);
-}
-
-.cell-id i {
-  flex: 1;
-  position: relative;
-  font-style: italic;
-}
-
-.cell-type {
-  flex: 1;
-  font-weight: 600;
-  font-size: var(--fs-14);
-  display: inline-block;
-  min-width: var(--min-w-160);
-  max-width: var(--max-w-225);
-  text-align: center;
-}
-
-.cell-item {
-  flex: 2;
-  position: relative;
-  font-size: var(--fs-14);
-  display: inline-block;
-  min-width: var(--min-w-225);
-  max-width: 100%;
-  text-align: center;
-  font-style: italic;
-
-}
-
-.cell-stock-before {
-  flex: 1;
-  font-size: var(--fs-14);
-  display: inline-block;
-  min-width: var(--min-w-89);
-  max-width: var(--max-w-165_3);
-  text-align: center;
-  font-style: italic;
-}
-
-.cell-stock-after {
-  flex: 1;
-  font-weight: 600;
-  font-size: var(--fs-14);
-  display: inline-block;
-  min-width: var(--min-w-89);
-  max-width: var(--max-w-165_3);
-  text-align: center;
-  font-style: italic;
-}
-
-/* Action / delete button */
+/* ─────────────────────────────────────────
+   Action / delete button
+───────────────────────────────────────── */
 .action-buttons {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: var(--width-70);
+  width: 70px;
+  min-width: 70px;
   flex-shrink: 0;
 }
 
@@ -389,7 +405,7 @@ body {
   border: 1px solid rgba(62, 44, 35, 0.30);
   border-radius: var(--br-10);
   height: var(--height-30);
-  width: var(--width-70);
+  width: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -408,11 +424,6 @@ body {
 }
 
 .btn-delete img {
-  /*
-    TODO: Insert trash/delete icon image here.
-    e.g. src="pics_icons/trash.svg"
-    width/height: 16px
-  */
   width: 16px;
   height: 16px;
   object-fit: contain;
@@ -422,7 +433,7 @@ body {
    Empty state
 ───────────────────────────────────────── */
 .empty-state {
-  align-self: stretch;
+  width: 100%;
   padding: 40px var(--padding-10);
   text-align: center;
   color: rgba(62, 44, 35, 0.45);
@@ -469,12 +480,6 @@ body {
 }
 
 .btn-page img {
-  /*
-    TODO: Insert arrow icons:
-    Prev: src="pics_icons/tabler-arrow-left.svg"
-    Next: src="pics_icons/mingcute-arrow-right-line.svg"
-    width: 24px
-  */
   width: var(--width-24);
   max-height: 100%;
   object-fit: contain;
@@ -599,54 +604,19 @@ body {
   max-width: 320px;
 }
 
-.toast.show {
-  display: block;
-}
-
+.toast.show  { display: block; }
 .toast.success { background: #159459; }
 .toast.error   { background: var(--red); }
 
 /* ─────────────────────────────────────────
-   Responsive
+   Responsive — only body/title shrink;
+   table always scrolls horizontally
 ───────────────────────────────────────── */
-@media screen and (max-width: 1200px) {
-  .main-body {
-    max-width: 100%;
-  }
-  .table-view {
-    flex-wrap: wrap;
-  }
-  .text-container {
-    flex-wrap: wrap;
-  }
-}
-
 @media screen and (max-width: 825px) {
-  .page-title {
-    font-size: var(--fs-26);
-  }
-  .info {
-    min-width: 100%;
-  }
-  .inv-table {
-    padding-top: var(--padding-20);
-    box-sizing: border-box;
-  }
+  .page-title { font-size: var(--fs-26); }
 }
 
 @media screen and (max-width: 450px) {
-  .buttons-parent {
-    flex-wrap: wrap;
-    gap: 0;
-  }
-  .page-title {
-    font-size: var(--fs-26);
-  }
-  .info {
-    min-width: 100%;
-  }
-  .inv-table {
-    padding-top: var(--padding-20);
-    box-sizing: border-box;
-  }
+  .buttons-parent { flex-wrap: wrap; }
+  .page-title     { font-size: var(--fs-26); }
 }
